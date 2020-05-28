@@ -43,10 +43,10 @@ We recommend installing seqtk by either of these methods:
 </ol>
 
 <h3>Installing Pilon (optional) </h3>
-You can find the source and binaries for Pilon on the [Pilon Github page](https://github.com/broadinstitute/pilon/wiki) by the Broad Institute. You can also install Pilon using conda. Although this is optional, it is useful for checking for any misasssemblies not corrected by the MIRA assembly.
+You can find the source and binaries for Pilon on the [Pilon Github page](http://github.com/broadinstitute/pilon/wiki) by the Broad Institute. You can also install Pilon using conda. Although this is optional, it is useful for checking for any misasssemblies not corrected by the MIRA assembly.
 
 <h3> Installing Infernal (optional) </h3>
-One of the final checks is to find a full complement of ribosomal RNAs (16S, 23S, 5S), tRNAs (all amino acids represented) and RNase P RNA. [PROKKA](https://github.com/tseemann/prokka) can be used to find tRNAs and rRNAs and [tRNAscanSE](http://lowelab.ucsc.edu/tRNAscan-SE/) can be used to find tRNAs, but you will need to use Infernal to find RNase P RNA. 
+One of the final checks is to find a full complement of ribosomal RNAs (16S, 23S, 5S), tRNAs (all amino acids represented) and RNase P RNA. [PROKKA](http://github.com/tseemann/prokka) can be used to find tRNAs and rRNAs and [tRNAscanSE](http://lowelab.ucsc.edu/tRNAscan-SE/) can be used to find tRNAs, but you will need to use Infernal to find RNase P RNA. 
 
 Binaries and directions for installing Infernal can be found on the [Infernal homepage](http://eddylab.org/infernal/).
 
