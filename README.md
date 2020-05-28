@@ -35,7 +35,7 @@ Please see the manuscript ["A method for achieving complete microbial genomes an
 <h3>Installing MIRA</h3>
 
 * We used MIRA 5.0rc1.  Binaries and source can be found here: https://github.com/bachev/mira/releases/tag/V5rc1.  We recommend that you download and use the binaries.  You can learn more about MIRA in the [Definitive Guide to MIRA]( http://mira-assembler.sourceforge.net/docs/DefinitiveGuideToMIRA.html) written by its author, Bastien Chevreux.  Note that the versions of MIRA on SourceForge are not up to date.
-* After installing MIRA, make sure that mirabait and mira are in your path.  
+* After unpacking or installing MIRA, make sure that mirabait and mira are in your path. These are found in the bin directory when you download MIRA.  
 
 <h3>Installing seqtk</h3>
 We recommend installing seqtk by either of these methods:
@@ -94,8 +94,8 @@ Criteria for picking a bin:
  During each iteration contigs that do not meet the minimum coverage are filtered out. We recommend starting with a minimum coverage of 75% of the top contig.
  
  <h3>Using the script</h3>
-*Make sure that the `manifest_template.conf` file is in the same directory.  
-*Then run
+* Make sure that the `manifest_template.conf` file is in the same directory.  
+* An example of running the script is
 
 ```bash
 jorg 33 bin1.fasta myreads.fastq.gz 200 10
@@ -103,9 +103,9 @@ jorg 33 bin1.fasta myreads.fastq.gz 200 10
 where 33 is the kmer value, bin1.fasta is the fasta file with contigs, myreads.fastq.gz are your interleaved sequencing reads that have been trimmed and quality checked, 200 is the minimum coverage value, and 10 is the number of iterations.
 
 <h2> Check assembly stats and repeat as necessary</h2>
-*The jorg script will output a file called "iterations.txt" with contig stats.  Check this file to see if the contigs are getting longer.  You may also want to remove contigs that appear to be contamination, e.g. those that are short and are not extending, before the next set of iterations.  If you need to continue iterating, use the <binID>.out.fasta file as input to the next round.
+* The jorg script will output a file called "iterations.txt" with contig stats.  Check this file to see if the contigs are getting longer.  You may also want to remove contigs that appear to be contamination, e.g. those that are short and are not extending, before the next set of iterations.  If you need to continue iterating, use the <binID>.out.fasta file as input to the next round.
   
-*Stop when you reach one of these three outcomes:
+* Stop when you reach one of these three outcomes:
   
 <h3>Circularization</h3> You find a single contig with a significant - and exact - repeat at the ends. In addition, we required that the repeat be at least 100 nt in length, is longer than any other repeat in the contig, and does not match any of the other repeats.
 
