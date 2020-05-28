@@ -24,10 +24,25 @@ Please see the manuscript ["A method for achieving complete microbial genomes an
 <ul>
   <li>MIRA</li> 
   <li>seqtk</li>
-  <li>PROKKA or Infernal</li>
 </ul>
+<h2> Optional for final checks after circularization </h2>
+<ul>
+  <li>Pilon</li>
+  <li>PROKKA or Infernal </li>
+</ul>
+  
+<h3>Installing MIRA</h3>
 
-We recommend using conda to install MIRA and seqtk.
+We used MIRA 5.0rc1.  Binaries and source can be found here: https://github.com/bachev/mira/releases/tag/V5rc1.  We recommend that you download and use the binaries.  You can learn more about MIRA in the [Definitive Guide to MIRA]( http://mira-assembler.sourceforge.net/docs/DefinitiveGuideToMIRA.html) written by its author, Bastien Chevreux.  Note that the versions on MIRA on SourceForge are not up to date.
+
+<h3>Installing seqtk</h3>
+We recommend installing seqtk by either of these methods:
+<ol>
+  <li>Install using conda. `conda install seqtk`, or if you have not installed the bioconda channel, `conda install -c bioconda seqtk`  </li>
+  <li>Install from source.  Follow the directions from the Github site: https://github.com/lh3/seqtk.</li>
+</ol>
+
+
 
 <h1> Tutorial </h1>
 <h2> Pick a bin to circularize </h2>
