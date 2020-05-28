@@ -8,7 +8,7 @@ Contact Lauren with questions (lmlui at lbl dot gov).
 
 Please see the manuscript ["A method for achieving complete microbial genomes and better quality bins from metagenomics data" on bioRxiv](https://www.biorxiv.org/content/10.1101/2020.03.05.979740v2.full) and cite it if you use this method.
 
-<h1> General Overview of Method </h1>
+<h1>Overview of Method </h1>
 
 <p align="center">
 <img src="https://www.biorxiv.org/content/biorxiv/early/2020/03/07/2020.03.05.979740/F1.large.jpg" width="50%">
@@ -40,14 +40,14 @@ Please see the manuscript ["A method for achieving complete microbial genomes an
 <h3>Installing seqtk</h3>
 We recommend installing seqtk by either of these methods:
 
-1. Install using conda. `conda install seqtk`. If you have not installed the bioconda channel, then use `conda install -c bioconda seqtk`
+1. Install using conda. `conda install -c bioconda seqtk`
 1. Install from source.  Follow the directions from the [seqtk Github site](https://github.com/lh3/seqtk).
 
 After installing seqtk make sure that it is in your path.
 
 <h3>Installing BWA (optional)</h3>
 
-Information on BWA can be found here: http://bio-bwa.sourceforge.net/.  You can install bwa by
+Information on BWA can be found here: http://bio-bwa.sourceforge.net/.  You can install bwa by either of these methods
 
 1. Download from SourceForge (https://sourceforge.net/projects/bio-bwa/). Unzip and go into the directory. Type `make`.
 1. Using conda. `conda install bwa`.
@@ -63,11 +63,12 @@ You can find the source and binaries for Pilon on the [Pilon Github page](http:/
 
 Binaries and directions for installing Infernal can be found on the [Infernal homepage](http://eddylab.org/infernal/).
 
-One of the final checks is to find a full complement of ribosomal RNAs (16S, 23S, 5S), tRNAs (all amino acids represented) and RNase P RNA. [PROKKA](http://github.com/tseemann/prokka) can be used to find tRNAs and rRNAs and [tRNAscanSE] (http://lowelab.ucsc.edu/tRNAscan-SE/) can be used to find tRNAs, but you will need to use Infernal to find RNase P RNA. There are two types of bacterial RNase P RNA and two types of archaeal RNase P RNA.  Each have different models in RFAM (https://rfam.org/family/RF00010).
+One of the final checks is to find a full complement of ribosomal RNAs (16S, 23S, 5S), tRNAs (all amino acids represented) and RNase P RNA. [PROKKA](http://github.com/tseemann/prokka) can be used to find tRNAs and rRNAs and [tRNAscanSE](http://lowelab.ucsc.edu/tRNAscan-SE/) can be used to find tRNAs, but you will need to use Infernal to find RNase P RNA. There are two types of bacterial RNase P RNA and two types of archaeal RNase P RNA.  Each have different models in RFAM (https://rfam.org/family/RF00010).
 
 
 
-<h1> Tutorial </h1>
+<h1> General guide </h1>
+
 <h2> Assemble your metagenome and bin contigs</h2>
 
 We use [BBtools](https://jgi.doe.gov/data-and-tools/bbtools/) for cleaning the reads, [SPAdes](http://cab.spbu.ru/software/spades/) for assembly, and [MetaBat 2](https://bitbucket.org/berkeleylab/metabat) for binning.
@@ -86,7 +87,7 @@ Criteria for picking a bin:
   
 1. Create a manifest file for MIRA 
 1. Use `mirabait` to map reads to a bin 
-1. Use MIRA to reassemble the reads 
+1. Use `mira` to reassemble the reads 
 1. Repeat steps 2 and 3 until reaching the number of iterations indicated
   
   <h3>Parameters</h3>
@@ -133,5 +134,6 @@ There are cases where a bin is shattered into a multitude of pieces. We are not 
 * Pilon has a detailed [Github wiki page](https://github.com/broadinstitute/pilon/wiki/Requirements-&-Usage) that details how to use it and understand its output.
 
 <h2> Final checks for non-coding RNAs </h2>
-Run Infernal to look for tRNAs, rRNAs, and RNase P RNA.
+
+To look for tRNAs, rRNAs, and RNase P RNA, scan genomes with models from RFAM by using `cmsearch` from Infernal. If your genome is missing any of these RNAs, it might be falsely circularized.
 
