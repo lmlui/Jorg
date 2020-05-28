@@ -64,6 +64,9 @@ One of the final checks is to find a full complement of ribosomal RNAs (16S, 23S
 
 
 <h1> Tutorial </h1>
+<h2> Assemble your metagenome and bin contigs</h2>
+We use [BBtools](https://jgi.doe.gov/data-and-tools/bbtools/) for cleaning the reads, [SPAdes](http://cab.spbu.ru/software/spades/) for assembly, and [MetaBat 2](https://bitbucket.org/berkeleylab/metabat) for binning.
+
 <h2> Pick a bin to circularize</h2>
 Criteria for picking a bin:
 <ol>
