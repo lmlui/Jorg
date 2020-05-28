@@ -4,7 +4,7 @@ By Lauren Lui, Torben Nielsen, and Adam Arkin
 
 This is a method to help circularize genomes from shotgun metagenomics data. We named this project Jorg after J&ouml;rgmungandr, <em>aka</em> the Midgard Serpent, from Norse mythology. It is an example of an ouroboros, a snake biting its own tail.
 
-Contact Lauren with questions (lmlui at lbl dot gov)
+Contact Lauren with questions (lmlui at lbl dot gov).
 
 Please see the manuscript ["A method for achieving complete microbial genomes and better quality bins from metagenomics data" on bioRxiv](https://www.biorxiv.org/content/10.1101/2020.03.05.979740v2.full) and cite it if you use this method.
 
@@ -38,10 +38,10 @@ We used MIRA 5.0rc1.  Binaries and source can be found here: https://github.com/
 
 <h3>Installing seqtk</h3>
 We recommend installing seqtk by either of these methods:
-<ol>
-  <li>Install using conda. `conda install seqtk`, or if you have not installed the bioconda channel, `conda install -c bioconda seqtk`  </li>
-  <li>Install from source.  Follow the directions from the [seqtk Github site](https://github.com/lh3/seqtk).</li>
-</ol>
+
+1. Install using conda. `conda install seqtk`. If you have not installed the bioconda channel, then use `conda install -c bioconda seqtk`
+1. Install from source.  Follow the directions from the seqtk Github site: https://github.com/lh3/seqtk.
+
 
 <h3>Installing BWA (optional)</h3>
 Information on BWA can be found here: http://bio-bwa.sourceforge.net/.  You can install bwa by
@@ -65,7 +65,7 @@ One of the final checks is to find a full complement of ribosomal RNAs (16S, 23S
 
 <h1> Tutorial </h1>
 <h2> Assemble your metagenome and bin contigs</h2>
-We use [BBtools](https://jgi.doe.gov/data-and-tools/bbtools/) for cleaning the reads, [SPAdes](http://cab.spbu.ru/software/spades/) for assembly, and [MetaBat 2](https://bitbucket.org/berkeleylab/metabat) for binning.
+We use BBtools(https://jgi.doe.gov/data-and-tools/bbtools/) for cleaning the reads, SPAdes(http://cab.spbu.ru/software/spades/) for assembly, and MetaBat 2(https://bitbucket.org/berkeleylab/metabat) for binning.
 
 <h2> Pick a bin to circularize</h2>
 Criteria for picking a bin:
@@ -98,7 +98,7 @@ Criteria for picking a bin:
 ```bash
 jorg 33 bin1.fasta myreads.fastq.gz 200 10
 ```
-where 33 is the kmer value, bin1.fasta is the fasta file with contigs, myreads.fastq.gz are your interleaved sequencing reads, 200 is the minimum coverage value, and 10 is the number of iterations.
+where 33 is the kmer value, bin1.fasta is the fasta file with contigs, myreads.fastq.gz are your interleaved sequencing reads that have been trimmed and quality checked, 200 is the minimum coverage value, and 10 is the number of iterations.
 
 <h2> Check assembly stats and repeat as necessary</h2>
 *The jorg script will output a file called "iterations.txt" with contig stats.  Check this file to see if the contigs are getting longer.  You may also want to remove contigs that appear to be contamination, e.g. those that are short and are not extending, before the next set of iterations.  If you need to continue iterating, use the <binID>.out.fasta file as input to the next round.
