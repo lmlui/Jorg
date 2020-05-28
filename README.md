@@ -34,7 +34,8 @@ Please see the manuscript ["A method for achieving complete microbial genomes an
   
 <h3>Installing MIRA</h3>
 
-We used MIRA 5.0rc1.  Binaries and source can be found here: https://github.com/bachev/mira/releases/tag/V5rc1.  We recommend that you download and use the binaries.  You can learn more about MIRA in the [Definitive Guide to MIRA]( http://mira-assembler.sourceforge.net/docs/DefinitiveGuideToMIRA.html) written by its author, Bastien Chevreux.  Note that the versions of MIRA on SourceForge are not up to date.
+* We used MIRA 5.0rc1.  Binaries and source can be found here: https://github.com/bachev/mira/releases/tag/V5rc1.  We recommend that you download and use the binaries.  You can learn more about MIRA in the [Definitive Guide to MIRA]( http://mira-assembler.sourceforge.net/docs/DefinitiveGuideToMIRA.html) written by its author, Bastien Chevreux.  Note that the versions of MIRA on SourceForge are not up to date.
+* After installing MIRA, make sure that mirabait and mira are in your path.  
 
 <h3>Installing seqtk</h3>
 We recommend installing seqtk by either of these methods:
@@ -42,6 +43,7 @@ We recommend installing seqtk by either of these methods:
 1. Install using conda. `conda install seqtk`. If you have not installed the bioconda channel, then use `conda install -c bioconda seqtk`
 1. Install from source.  Follow the directions from the seqtk Github site: https://github.com/lh3/seqtk.
 
+After installing seqtk make sure that it is in your path.
 
 <h3>Installing BWA (optional)</h3>
 Information on BWA can be found here: http://bio-bwa.sourceforge.net/.  You can install bwa by
