@@ -111,6 +111,13 @@ Criteria for picking a bin:
 jorg 33 bin1.fasta myreads.fastq.gz 200 10
 ```
 where 33 is the kmer value, bin1.fasta is the fasta file with contigs, myreads.fastq.gz are your interleaved sequencing reads that have been trimmed and quality checked, 200 is the minimum coverage value, and 10 is the number of iterations.
+* Output:
+  * `mirabait.log` - log file from `mirabait`.  This is extremely helpful if you are getting errors at this step.
+  * `mira.log` - log file from `mira`.
+  * `iterations.txt` - contig stats for the assembly from each iteration
+  * Directory called `Iterations` with the assemblies from each iteration
+  * `yourbin.out.fasta` -  Assembly from the last iteration
+
 
 <h2> Check assembly stats and repeat as necessary</h2>
 
