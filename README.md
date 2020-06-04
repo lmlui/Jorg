@@ -25,6 +25,7 @@ Please see the manuscript ["A method for achieving complete microbial genomes an
   <li>MIRA</li> 
   <li>seqtk</li>
   <li>BWA (optional)</li>
+  <li>LAST (optional)</li>
 </ul>
 <h2> Optional for final checks after circularization </h2>
 <ul>
@@ -54,6 +55,15 @@ Information on BWA can be found here: http://bio-bwa.sourceforge.net/.  You can 
 
 
 BWA is used to determine the coverage of the bin.  Most binning software should also output coverage values. However not all binning software will output the same values, especially if you are changing parameters!  We recommend using BWA or checking the coverage values output by MetaBat 2.
+
+<h3>Installing LAST (optional)</h3>
+
+LAST is designed to find regions of sequence similarity in large datasets.  We build a LAST DB to help determine if a genome has been circularized.  
+
+1. Installation using conda. `conda install -c bioconda last`
+1. See the [LAST website](http://last.cbrc.jp/) for more information and [directions for manual installation](http://last.cbrc.jp/doc/last.html). 
+
+
 
 <h3>Installing Pilon (optional) </h3>
 
@@ -127,6 +137,8 @@ where 33 is the kmer value, bin1.fasta is the fasta file with contigs, myreads.f
   
 <h3>Circularization</h3> 
 You find a single contig with a significant - and exact - repeat at the ends. In addition, we required that the repeat be at least 100 nt in length, is longer than any other repeat in the contig, and does not match any of the other repeats.
+
+See the script `make_assembly_db` for an automated look at the location and length of repeats in a genome.  This script requires that LAST is installed.
 
 <h3>Idempotence</h3> 
 You observe no change in the assembled contigs after a round of read pair extraction and reassembly with MIRA. 
