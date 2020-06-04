@@ -133,6 +133,8 @@ where 33 is the kmer value, bin1.fasta is the fasta file with contigs, myreads.f
 
 * The jorg script will output a file called `iterations.txt` with contig stats.  Check this file to see if the contigs are getting longer.  You may also want to remove contigs that appear to be contamination, e.g. those that are short and are not extending, before the next set of iterations.  If you need to continue iterating, use the <binID>.out.fasta file as input to the next round.
   
+* Note that sometimes the best assembly might not be the final iteration.
+  
 * Stop when you reach one of these three outcomes:
   
 <h3>Circularization</h3> 
