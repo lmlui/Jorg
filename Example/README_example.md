@@ -5,7 +5,7 @@ This is an example on how to circularize a MAG.  This is one of the MAGs that is
 
 <h1> Data </h1>
   
-Data from this example is from the dataset 
+Data from this example is from processing the metagenome [SRX3307784](https://www.ncbi.nlm.nih.gov/sra/?term=SRX3307784) and is from this study: [Wilhelm RC, Hanson BT, Chandra S, Madsen E. Community dynamics and functional characteristics of naphthalene-degrading populations in contaminated surface sediments and hypoxic/anoxic groundwater. Environ Microbiol. 2018;20: 3543–3559]( https://doi.org/10.1111/1462-2920.14309).
 
 <h1> Picking a bin to circularize </h2>
 
