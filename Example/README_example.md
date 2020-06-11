@@ -77,8 +77,8 @@ bin.186_c1      bin.186_c1      100.00  295     0       0       581644  581938  
 
 <h1> Final Checks </h1>
 
-* Trim the end of the sequence and use Pilon as a final check for misassemblies.
+* Trim the end of the sequence and use Pilon as a final check for misassemblies. 
 
-* Use `fasta_rotate` to rotate the genome half its length and use Pilon again.
+* Use `fasta_rotate` to rotate the genome half its length and use Pilon again. Pilon may shrink the genome slightly (as in this case) to improve the overlap.
 
 * Check for 16S, 23S, 5S, tRNAs, and RNase P RNA in the final genome to ensure that the genome was not falsely circularized.
