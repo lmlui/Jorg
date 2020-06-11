@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+#############################################################################
+# 
+# make_assembly_db
+#
+# Authors: Lauren Lui and Torben Nielsen
+#
+# Usage: make_assembly_db <fasta file>
+#
+#############################################################################
+
+# Get thefile ID by removing the file extension
+filepath="${1}"
+filename=$(basename "$filepath")
+fileID=$(echo "${filename%.*}" )
+
+
+lastdb "$fileID" ${1}
+lastal -f BlastTab+ "$fileID" ${1} > "$fileID".tbl
+awk '{if($3 >= 95.0 && $4 >= 40 || NR <= 26) print}' "$fileID".tbl > "$fileID".reduced
