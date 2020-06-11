@@ -150,7 +150,7 @@ There are cases where a bin is shattered into a multitude of pieces. We are not 
 
 <h2> Use Pilon as a final check for misasssemblies </h2>
 
-* After circularizing a contig, we do final checks for misassemblies with Pilon. We use Pilon on the contig and then we rotate it by half the length to ensure that the ends were in the middle and apply Pilon again. We rotate the genomes because Pilon is not capable of covering the ends of a contig. 
+* After circularizing a contig, we do final checks for misassemblies with Pilon. We use Pilon on the contig and then we rotate it by half the length to ensure that the ends were in the middle and apply Pilon again. See the script `fasta_rotate`. We rotate the genomes because Pilon is not capable of covering the ends of a contig. 
 
 * Pilon has a detailed [Github wiki page](https://github.com/broadinstitute/pilon/wiki/Requirements-&-Usage) that details how to use it and understand its output.
 
