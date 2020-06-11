@@ -54,7 +54,7 @@ Information on BWA can be found here: http://bio-bwa.sourceforge.net/.  You can 
 1. Using conda. `conda install bwa`.
 
 
-BWA is used to determine the coverage of the bin.  Most binning software should also output coverage values. However not all binning software will output the same values, especially if you are changing parameters!  We recommend using BWA or checking the contig coverage values output by MetaBat 2 (`depth.txt` in the output folder).
+BWA is used to determine the coverage of the bin.  Most binning software should also output coverage values. However not all binning software will output the same values, especially if you are changing parameters!  We recommend using BWA or checking the contig coverage values output by MetaBat 2 (`<contigfile>.depth.txt` file).
 
 <h3>Installing LAST (optional)</h3>
 
@@ -109,7 +109,7 @@ Criteria for picking a bin:
 
  <h4>Minimum coverage</h4>
  
- During each iteration contigs that do not meet the minimum coverage are filtered out. We recommend starting with a minimum coverage of 75% of the top contig. Use BWA to map reads to get coverage values or see the `totalAvgDepth` field in the `depth.txt` file in MetaBat 2 output.
+ During each iteration contigs that do not meet the minimum coverage are filtered out. We recommend starting with a minimum coverage of 75% of the top contig. Use BWA to map reads to get coverage values or see the `totalAvgDepth` field in the `<contigfile>.depth.txt` file in MetaBat 2 output.
  
  <h3>Using the script</h3>
  
