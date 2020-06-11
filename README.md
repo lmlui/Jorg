@@ -102,7 +102,7 @@ Criteria for picking a bin:
   
   <h3>Parameters</h3>
   
-  The Jorg script requires that you specify a kmer value for baiting the reads and a minimum coverage value for filtering contigs.  Here are some guidelines for choosing these parameters:
+  The `jorg` script requires that you specify a kmer value for baiting the reads and a minimum coverage value for filtering contigs.  Here are some guidelines for choosing these parameters:
   
  <h4>Kmer value for baiting</h4>
  mirabait requires a kmer value for baiting reads.  We recommend starting with 31 or 33. Increasing the kmer value will make the read recruitment more strict if you are worried that you are picking up reads that do not belong in your bin.
@@ -126,12 +126,12 @@ where 33 is the kmer value, bin1.fasta is the fasta file with contigs, myreads.f
   * `mira.log` - log file from `mira`.
   * `iterations.txt` - contig stats for the assembly from each iteration
   * Directory called `Iterations` with the assemblies from each iteration
-  * `yourbin.out.fasta` -  Assembly from the last iteration
+  * `<binID>.out.fasta` -  Assembly from the last iteration
 
 
 <h2> Check assembly stats and repeat as necessary</h2>
 
-* The jorg script will output a file called `iterations.txt` with contig stats.  Check this file to see if the contigs are getting longer.  You may also want to remove contigs that appear to be contamination, e.g. those that are short and are not extending, before the next set of iterations.  If you need to continue iterating, use the <binID>.out.fasta file as input to the next round.
+* The `jorg` script will output a file called `iterations.txt` with contig stats.  Check this file to see if the contigs are getting longer.  You may also want to remove contigs that appear to be contamination, e.g. those that are short and are not extending, before the next set of iterations.  If you need to continue iterating, use the `<binID>.out.fasta` file as input to the next round.
   
 * Note that sometimes the best assembly might not be the final iteration.
   
