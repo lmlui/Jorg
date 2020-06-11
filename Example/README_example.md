@@ -7,6 +7,8 @@ This is an example on how to circularize a MAG.  This is one of the MAGs that is
   
 Data from this example is from processing the metagenome [SRX3307784](https://www.ncbi.nlm.nih.gov/sra/?term=SRX3307784) and is from this study: [Wilhelm RC, Hanson BT, Chandra S, Madsen E. Community dynamics and functional characteristics of naphthalene-degrading populations in contaminated surface sediments and hypoxic/anoxic groundwater. Environ Microbiol. 2018;20: 3543–3559]( https://doi.org/10.1111/1462-2920.14309).
 
+The trimmed and quality filtered reads are provided for this example.
+
 <h1> Picking a bin to circularize </h2>
 
 * Look for a bin that has less than 10 contigs. The bin.186 has 4 contigs. Two of the contigs are of decent length at ~241Kb and ~215Kb
@@ -22,9 +24,9 @@ SRX3307784_contig_4243  22132      158.726
 
 <h1> Run jorg </h1>
 
-We'll start with a kmer baiting value of 33 and 20 iterations.  Usually 5-10 iterations is a good place to start to get a feel for how many iterations you may need. Since the average coverage was ~162X, we want to pick a minimum coverage value that is ~75-80% of that.  We'll try 130.
+We'll start with a kmer baiting value of 33 and 20 iterations.  Usually 5-10 iterations is a good place to start to get a feel for how many iterations you may need. Since the average coverage was ~162X, we want to pick a minimum coverage value that is ~75-80% of that.  We'll try 130. 
 
-`jorg 33 bin.186.fa SRX330 130 20`
+`jorg 33 bin.186.fa SRX3307784_clean.fastq.gz 130 20`
 
 <h1> Evaluate Iterations </h1>
 
