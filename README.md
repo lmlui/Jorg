@@ -5,9 +5,12 @@ By Lauren Lui, Torben Nielsen, and Adam Arkin
 <p align="center">
 <img src="https://genomics.lbl.gov/~lmlui/Images/StrikingImage-Jorg2.png" width="50%" >
 </p>
+
 This is a method to help circularize genomes from shotgun metagenomics data. We named this project Jorg after J&ouml;rgmungandr, <em>aka</em> the Midgard Serpent, from Norse mythology. It is an example of an ouroboros, a snake biting its own tail.
 
+
 Contact Lauren with questions (lmlui at lbl dot gov).
+
 
 Please see the manuscript ["A method for achieving complete microbial genomes and better quality bins from metagenomics data" on bioRxiv](https://www.biorxiv.org/content/10.1101/2020.03.05.979740v2.full) and cite it if you use this method.
 
