@@ -62,13 +62,13 @@ bin.186_c3       3080   50.88          582321
 
 <h1> Check for Circularization </h1>
 
-The file `19.fasta` in the `Iterations` directory contains the 19th assembly.  Use the `make_assembly_db` script to check for a long repeat at the end that is longer than all other repeats.
+The file `19.fasta` in the `Iterations` directory contains the 19th assembly (you can find this file in the `OutputFiles` directory here in this Github repo).  Use the `make_assembly_db` script to check for a long repeat at the end that is longer than all other repeats.
 
 ```
 make_assembly_db 19.fasta
 ```
 
-Taking a look at the `19.reduced` file, we see that there is a significant repeat on the ends that is greater than 100 bp (295 bp long) and is longer than any other repeat in the genome.
+Taking a look at the `19.reduced` file (in the `OutputFiles` directory here in this Github repo), we see that there is a significant repeat on the ends that is greater than 100 bp (295 bp long) and is longer than any other repeat in the genome.
 
 ```
 # Fields: query id, subject id, % identity, alignment length, mismatches, gap opens, q. start, q. end, s. start, s. end, evalue, bit score, query length, subject length
