@@ -33,7 +33,7 @@ The file of the original bin is included (`bin.186.fa`) and the trimmed and qual
 
 <h1> Evaluate Iterations </h1>
 
-Check the `iterations.txt` file output.  You can see that the bin starts to improve and probably reaches circularization between iterations 13-19. We'll check Iteration 19 for circularity.
+Check the `iterations.txt` file output (in the `OutputFiles` directory here in this Github repo).  You can see that the bin starts to improve and probably reaches circularization between iterations 13-19. We'll check Iteration 19 for circularity.
 
 ```
 contig_name    length	GC_percent    cumulative_length
