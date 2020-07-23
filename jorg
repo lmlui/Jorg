@@ -16,6 +16,8 @@
 #
 ##################################################################
 
+echo "***Start running Jorg***"
+
 ####### Prep files #######
 
 # Get the bin ID by removing the file extension
@@ -28,56 +30,85 @@ outfile="$binID".out.fasta
 cp ${2} "$outfile"
 
 # Make manifest file for MIRA
+echo "Start: make manifest file for MIRA"
 cat manifest_template.conf | sed "s/XXX/$binID/g" > manifest.conf
+echo "End: make manifest file for MIRA"
 
 # Create file for contig stats of iterations
 printf "contig_name\tlength\tGC_percent\tcumulative_length\n" > iterations.txt
 
-
 ####### Iterate recruiting reads and MIRA assembly #######
 
+echo "Start: generating new directory named 'Iterations'"
 mkdir -p Iterations
+echo "End: generating new directory named 'Iterations'"
 
 for (( i = 1; i <= $5; i++ ))
 do
-	echo "Iteration "${i} >> iterations.txt
-	
-	# Recruit reads with mirabait
-	mirabait -k ${1} -b "$outfile" -P ${3} -o "$binID".fastq &> mirabait.log
+    echo "Start: iteration "${i}
+    echo "Iteration "${i} >> iterations.txt
+    
+    # Recruit reads with mirabait
+    echo "Start: recruiting reads with mirabait"
+    mirabait -k ${1} -b "$outfile" -P ${3} -o "$binID".fastq &> mirabait.log
+    echo "End: recruiting reads with mirabait"
 
-	#Check if the reads file is empty.  Seqtk will hang if the input file is empty.
-	if [ ! -s "$binID".fastq ]
-	then
-        	echo "Error: fastq file empty."
-        	exit 1
-	fi
+    #Check if the reads file is empty.  Seqtk will hang if the input file is empty.
+    if [ ! -s "$binID".fastq ]
+    then
+            echo "Error: fastq file empty."
+            exit 1
+    fi
 
-	# Deinterleave reads
-	seqtk seq -1 -C ${binID}.fastq | seqtk rename - ${binID}_ | sed "s/\(^@${binID}_[0-9][0-9]*$\)/\1\/1/" > ${binID}_1.fastq
-	seqtk seq -2 -C ${binID}.fastq | seqtk rename - ${binID}_ | sed "s/\(^@${binID}_[0-9][0-9]*$\)/\1\/2/" > ${binID}_2.fastq
+    # Deinterleave reads
+    echo "Start: deinterleaving reads"
+    seqtk seq -1 -C ${binID}.fastq | seqtk rename - ${binID}_ | sed "s/\(^@${binID}_[0-9][0-9]*$\)/\1\/1/" > ${binID}_1.fastq
+    echo "Forward reads extracted"
+    seqtk seq -2 -C ${binID}.fastq | seqtk rename - ${binID}_ | sed "s/\(^@${binID}_[0-9][0-9]*$\)/\1\/2/" > ${binID}_2.fastq
+    echo "Reverse reads extracted"
+    echo "End: deinterleaving reads"
 
-	# Run MIRA assembly
-	mira manifest.conf &> mira.log
+    # Run MIRA assembly
+    echo "Start: run MIRA assembly"
+    mira manifest.conf &> mira.log
+    echo "End: run MIRA assembly"
 
-	# Get MIRA assembly file
-	cp "$binID"_assembly/"$binID"_d_results/"$binID"_out.unpadded.fasta "$binID"_MIRA.fasta
+    # Get MIRA assembly file
+    echo "Start: get MIRA assembly file"
+    cp "$binID"_assembly/"$binID"_d_results/"$binID"_out.unpadded.fasta "$binID"_MIRA.fasta
+    echo "End: get MIRA assembly file"
 
-	# Get contigs that are greater than 1000bp and have coverage greater than the indicated minimum
-	awk -v coverage_min="$4" '{if($2 >= 1000 && $6 >= coverage_min || NR == 1) print}' "$binID"_assembly/"$binID"_d_info/"$binID"_info_contigstats.txt > list.txt
+    # Get contigs that are greater than 1000bp and have coverage greater than the indicated minimum
+    echo "Start: get contigs >1000bp and with sufficient coverage"
+    awk -v coverage_min="$4" '{if($2 >= 1000 && $6 >= coverage_min || NR == 1) print}' "$binID"_assembly/"$binID"_d_info/"$binID"_info_contigstats.txt > list.txt
+    echo "End: get contigs >1000bp and with sufficient coverage"
 
-	#Check if the outfile is empty.  Seqtk will hang if the input file is empty.
-	if [ ! -s "$outfile" ]
+    #Check if the outfile is empty.  Seqtk will hang if the input file is empty.
+    echo "Start: check if input fasta file empty."
+    if [ ! -s "$outfile" ]
         then
                 echo "Error: fasta outfile empty."
                 exit 1
         fi
+    echo "End: check if input fasta file empty."
 
-  #Output assembly based on stats collected in list.txt
-	seqtk subseq "$binID"_MIRA.fasta list.txt > "$outfile"
-	
-	# Output contig stats on assembly
-	# contig_name  length  %GC  cumulative_length
-	seqtk comp $binID.out.fasta | sort -k 2,2nr | awk '{printf "%-40s %8d %7.2f %8d\n", $1, $2, 100.0 * ($4 + $5)/($3 + $4 + $5 + $6), sum += $2}' >> iterations.txt
+    # Output assembly based on stats collected in list.txt
+    echo "Start: output assembly based on stats collected in list.txt"
+    seqtk subseq "$binID"_MIRA.fasta list.txt > "$outfile"
+    echo "End: output assembly based on stats collected in list.txt"
 
-	cp $binID.out.fasta Iterations/$binID_${i}.fasta
+    # Output contig stats on assembly
+    # contig_name  length  %GC  cumulative_length
+    echo "Start: output contig stats on assembly"
+    seqtk comp $binID.out.fasta | sort -k 2,2nr | awk '{printf "%-40s %8d %7.2f %8d\n", $1, $2, 100.0 * ($4 + $5)/($3 + $4 + $5 + $6), sum += $2}' >> iterations.txt
+    echo "End: output contig stats on assembly"
+
+    echo "Start: copy working fasta file to Iterations folder"
+    cp $binID.out.fasta Iterations/$binID_${i}.fasta
+    echo "End: copy working fasta file to Iterations folder"
+
+    echo "End: iteration "${i}
+
 done
+
+echo "***Success, finished running Jorg***"
