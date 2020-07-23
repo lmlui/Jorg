@@ -58,9 +58,9 @@ do
 
     #Check if the reads file is empty.  Seqtk will hang if the input file is empty.
     if [ ! -s "$binID".fastq ]
-    then
-            echo "Error: fastq file empty."
-            exit 1
+        then
+        echo "Error: fastq file empty."
+        exit 1
     fi
 
     # Deinterleave reads
