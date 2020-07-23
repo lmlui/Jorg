@@ -90,9 +90,9 @@ do
     echo "Start: check if input fasta file empty."
     if [ ! -s "$outfile" ]
         then
-                echo "Error: fasta outfile empty."
-                exit 1
-        fi
+        echo "Error: fasta outfile empty."
+        exit 1
+    fi
     echo "End: check if input fasta file empty."
 
     # Output assembly based on stats collected in list.txt
