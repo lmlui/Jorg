@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# Commands returning a non-zero exit code will cause an immediate exit
+set -e
+
 ##################################################################
 #
 # jorg - Circularization and improvement of metagenomic bins
