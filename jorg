@@ -26,10 +26,9 @@ function display_version() {
 }
 
 function display_help() {
-    echo " "
     echo "Jorg - version 1.0.0"
     echo " "
-    echo "Usage: jorg -b bin_186.fa -r SRX3307784_clean.fastq.gz -k 33 -c 200 -i 5"
+    echo "Usage: jorg -b bin.186.fa -r SRX3307784_clean.fastq.gz -k 33 -c 200 -i 5"
     echo
     echo "   -b, --bin_fasta_file       Genome bin in fasta format."
     echo "   -r, --reads_file           Metagenome reads file in fastq or fastq.gz format."
@@ -40,20 +39,19 @@ function display_help() {
     echo "   -h, --help                 Show this message."
     echo " "
     echo "Please cite: Lui LM, Nielsen TN, Arkin AP, 2020, biorxiv (https://www.biorxiv.org/content/10.1101/2020.03.05.979740v2.full)."
-    echo " "
     exit 1
 }
 
 # usage: write_log file_name append write_to_std write_to_file [message for logging...]
 function write_log () {
-    if [ $4 = true ]; then
-	      if [ $2 = true ]; then
+    if [[ $4 = true ]]; then
+	      if [[ $2 = true ]]; then
 		        echo "${@:5}" >> $1
 	      else
 		        echo "${@:5}" > $1
 	      fi
     fi
-    if [ $3 = true ]; then
+    if [[ $3 = true ]]; then
 	      echo "${@:5}"
     fi
 }
@@ -62,6 +60,7 @@ function write_log () {
 
 bin_fasta_file="NULL"
 reads_file="NULL"
+debug=false
 kmer_length=33
 min_coverage=200
 iterations=5
@@ -97,12 +96,12 @@ while [ "$1" != "" ]; do
 done
 
 if [[ ! "$bin_fasta_file" = *[!\ ]* ]]; then
-    echo "Input bin fasta file not defined (set using -b, --bin_fasta_file). Aborting."
+    echo "Input bin fasta file not defined (set using -b, --bin_fasta_file). Exiting."
     exit 1
 fi
 
 if [[ ! "$reads_file" = *[!\ ]* ]]; then
-    echo "Input reads fastq file not defined (set using -r, --reads_file). Aborting."
+    echo "Input reads fastq file not defined (set using -r, --reads_file). Exiting."
     exit 1
 fi
 
@@ -110,13 +109,13 @@ logfile=Jorg_${bin_fasta_file}.log
 
 
 # Check for MIRA installation
-command -v mira >/dev/null 2>&1 || { echo >&2 "Unable to locate MIRA. Please make sure MIRA is installed on your system. Aborting."; exit 1; }
+command -v mira >/dev/null 2>&1 || { echo >&2 "Error: unable to locate MIRA. Please make sure MIRA is installed on your system. Exiting."; exit 1; }
 
 # Check for MIRABAIT installation
-command -v mirabait >/dev/null 2>&1 || { echo >&2 "Unable to locate MIRABAIT. Please make sure MIRABAIT is installed on your system. Aborting."; exit 1; }
+command -v mirabait >/dev/null 2>&1 || { echo >&2 "Error: unable to locate MIRABAIT. Please make sure MIRABAIT is installed on your system. Exiting."; exit 1; }
 
 # Check for Seqtk installation
-command -v seqtk >/dev/null 2>&1 || { echo >&2 "Unable to locate Seqtk. Please make sure Seqtk is installed on your system. Aborting."; exit 1; }
+command -v seqtk >/dev/null 2>&1 || { echo >&2 "Error: unable to locate Seqtk. Please make sure Seqtk is installed on your system. Exiting."; exit 1; }
 
 # Check for other installations?
 
@@ -137,13 +136,13 @@ write_log $logfile true false $debug "seqtk version: " $(seqtk -v 2>&1)
 # Check for existence of files
 if [ ! -f "$bin_fasta_file" ]; then
     write_log $logfile true true true bin_fasta_file file not found: $bin_fasta_file
-    write_log $logfile true true true Aborting.
+    write_log $logfile true true true Exiting.
     exit 1
 fi
 
 if [ ! -f "$reads_file" ]; then
     write_log $logfile true true true contig file not found: $reads_file
-    write_log $logfile true true true Aborting.
+    write_log $logfile true true true Exiting.
     exit 1
 fi
 
@@ -153,14 +152,14 @@ write_log $logfile true true $debug "***Start running Jorg***"
 
 # Get the bin ID by removing the file extension
 # filepath="bin.186.fa"
-filepath="${2}"
+filepath=${bin_fasta_file}
 filename=$(basename "$filepath")
 binID=$(echo "${filename%.*}" )
 
 # Copy original file to avoid rewriting over it
 outfile="$binID".out.fasta
 # cp bin.186.fa "$outfile"
-cp ${2} "$outfile"
+cp "$bin_fasta_file" "$outfile"
 
 # Make manifest file for MIRA
 write_log $logfile true true $debug "Start: make manifest file for MIRA"
@@ -176,7 +175,7 @@ write_log $logfile true true $debug "Start: generating new directory named 'Iter
 mkdir -p Iterations
 write_log $logfile true true $debug "End: generating new directory named 'Iterations'"
 
-for (( i = 1; i <= $5; i++ ))
+for (( i = 1; i <= "$iterations"; i++ ))
 do
     write_log $logfile true true $debug "Start: iteration "${i}
     echo "Iteration "${i} >> iterations.txt
@@ -184,7 +183,7 @@ do
     # Recruit reads with mirabait
     write_log $logfile true true $debug "Start: recruiting reads with mirabait"
     # mirabait -k 33 -b "$outfile" -P SRX3307784_clean.fastq -o "$binID".fastq &> mirabait.log
-    mirabait -k ${1} -b "$outfile" -P ${3} -o "$binID".fastq &> mirabait.log
+    mirabait -k "$kmer_length" -b "$outfile" -P "$reads_file" -o "$binID".fastq &> mirabait.log
     write_log $logfile true true $debug "End: recruiting reads with mirabait"
 
     #Check if the reads file is empty.  Seqtk will hang if the input file is empty.
@@ -215,7 +214,7 @@ do
 
     # Get contigs that are greater than 1000bp and have coverage greater than the indicated minimum
     write_log $logfile true true $debug "Start: get contigs >1000bp and with sufficient coverage"
-    awk -v coverage_min="$4" '{if($2 >= 1000 && $6 >= coverage_min || NR == 1) print}' "$binID"_assembly/"$binID"_d_info/"$binID"_info_contigstats.txt > list.txt
+    awk -v coverage_min="$min_coverage" '{if($2 >= 1000 && $6 >= coverage_min || NR == 1) print}' "$binID"_assembly/"$binID"_d_info/"$binID"_info_contigstats.txt > list.txt
     write_log $logfile true true $debug "End: get contigs >1000bp and with sufficient coverage"
 
     #Check if the outfile is empty.  Seqtk will hang if the input file is empty.
