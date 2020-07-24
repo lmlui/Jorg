@@ -26,9 +26,15 @@ Please see the manuscript ["A method for achieving complete microbial genomes an
 
 <h1> Installation </h1>
 
+<h2> System Requirements </h2>
+<ul>
+  <li>At least XX Gb of RAM</li>
+  <li>At least XX free disk space</li>
+</ul>
+
 <h2> Dependencies </h2>
 <ul>
-  <li>MIRA</li> 
+  <li>MIRA</li>
   <li>seqtk</li>
   <li>BWA (optional)</li>
   <li>LAST (optional)</li>
@@ -38,7 +44,7 @@ Please see the manuscript ["A method for achieving complete microbial genomes an
   <li>Pilon</li>
   <li>Infernal </li>
 </ul>
-  
+
 <h3>Installing MIRA</h3>
 
 * We used MIRA 5.0rc1.  Binaries and source can be found here: https://github.com/bachev/mira/releases/tag/V5rc1.  We recommend that you download and use the binaries.  You can learn more about MIRA in the [Definitive Guide to MIRA]( http://mira-assembler.sourceforge.net/docs/DefinitiveGuideToMIRA.html) written by its author, Bastien Chevreux.  Note that the versions of MIRA on SourceForge are not up to date.
@@ -67,7 +73,7 @@ BWA is used to determine the coverage of the bin.  Most binning software should 
 LAST is designed to find regions of sequence similarity in large datasets.  We build a LAST DB to help determine if a genome has been circularized.  
 
 1. Installation using conda. `conda install -c bioconda last`
-1. See the [LAST website](http://last.cbrc.jp/) for more information and [directions for manual installation](http://last.cbrc.jp/doc/last.html). 
+1. See the [LAST website](http://last.cbrc.jp/) for more information and [directions for manual installation](http://last.cbrc.jp/doc/last.html).
 
 
 
@@ -98,28 +104,28 @@ Criteria for picking a bin:
 <h2> Use the Jorg script to iterate mapping reads to the bin with mirabait and reassemble with MIRA</h2>
 
   <h3> Overview</h3>
-  
+
   The Jorg script will do the following:
-  
-1. Create a manifest file for MIRA 
-1. Use `mirabait` to map reads to a bin 
-1. Use `mira` to reassemble the reads 
+
+1. Create a manifest file for MIRA
+1. Use `mirabait` to map reads to a bin
+1. Use `mira` to reassemble the reads
 1. Repeat steps 2 and 3 until reaching the number of iterations indicated
-  
+
   <h3>Parameters</h3>
-  
+
   The `jorg` script requires that you specify a kmer value for baiting the reads and a minimum coverage value for filtering contigs.  Here are some guidelines for choosing these parameters:
-  
+
  <h4>Kmer value for baiting</h4>
  mirabait requires a kmer value for baiting reads.  We recommend starting with 31 or 33. Increasing the kmer value will make the read recruitment more strict if you are worried that you are picking up reads that do not belong in your bin.
 
  <h4>Minimum coverage</h4>
- 
+
  During each iteration contigs that do not meet the minimum coverage are filtered out. We recommend starting with a minimum coverage of 75% of the top contig. Use BWA to map reads to get coverage values or see the `totalAvgDepth` field in the `<contigfile>.depth.txt` file in MetaBat 2 output.
- 
+
  <h3>Using the script</h3>
- 
-* Make sure that the `manifest_template.conf` file is in the same directory. 
+
+* Make sure that the `manifest_template.conf` file is in the same directory.
 
 * An example of running the script is
 
@@ -138,29 +144,28 @@ where 33 is the kmer value, bin1.fasta is the fasta file with contigs, myreads.f
 <h2> Check assembly stats and repeat as necessary</h2>
 
 * The `jorg` script will output a file called `iterations.txt` with contig stats.  Check this file to see if the contigs are getting longer.  You may also want to remove contigs that appear to be contamination, e.g. those that are short and are not extending, before the next set of iterations.  If you need to continue iterating, use the `<binID>.out.fasta` file as input to the next round.
-  
+
 * Note that sometimes the best assembly might not be the final iteration.
-  
+
 * Stop when you reach one of these three outcomes:
-  
-<h3>Circularization</h3> 
+
+<h3>Circularization</h3>
 You find a single contig with a significant - and exact - repeat at the ends. In addition, we required that the repeat be at least 100 nt in length, is longer than any other repeat in the contig, and does not match any of the other repeats.
 
 See the script `make_assembly_db` for an automated look at the location and length of repeats in a genome.  This script requires that LAST is installed.
 
-<h3>Idempotence</h3> 
-You observe no change in the assembled contigs after a round of read pair extraction and reassembly with MIRA. 
+<h3>Idempotence</h3>
+You observe no change in the assembled contigs after a round of read pair extraction and reassembly with MIRA.
 
-<h3>Chaos</h3> 
+<h3>Chaos</h3>
 There are cases where a bin is shattered into a multitude of pieces. We are not certain as to the exact cause, but this result is likely due to misassemblies from the initial SPAdes assembly (discussed in more depth in the manuscript). Chaos appears strongly correlated with GC and tends to occur more often when the GC content is high. We believe that Chaos bins are caused by lack of read coherence in the contigs.
 
 <h2> Use Pilon as a final check for misasssemblies </h2>
 
-* After circularizing a contig, we do final checks for misassemblies with Pilon. We use Pilon on the contig and then we rotate it by half the length to ensure that the ends were in the middle and apply Pilon again. See the script `fasta_rotate`. We rotate the genomes because Pilon is not capable of covering the ends of a contig. 
+* After circularizing a contig, we do final checks for misassemblies with Pilon. We use Pilon on the contig and then we rotate it by half the length to ensure that the ends were in the middle and apply Pilon again. See the script `fasta_rotate`. We rotate the genomes because Pilon is not capable of covering the ends of a contig.
 
 * Pilon has a detailed [Github wiki page](https://github.com/broadinstitute/pilon/wiki/Requirements-&-Usage) that details how to use it and understand its output.
 
 <h2> Final checks for non-coding RNAs </h2>
 
 To look for tRNAs, rRNAs, and RNase P RNA, scan genomes with models from RFAM by using `cmsearch` from Infernal. If your genome is missing any of these RNAs, it might be falsely circularized.
-
