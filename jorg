@@ -6,17 +6,18 @@ set -e
 ##################################################################
 #
 # jorg - Circularization and improvement of metagenomic bins
-# 
+#
 # Authors: Lauren Lui (lmlui@lbl.gov), Torben Nielsen, Adam Arkin
 #
 # $1 = Kmer value for baiting, default is 33
-# $2 = original bin fasta file 
+# $2 = original bin fasta file
 # $3 = file with reads
 # $4 = minimum coverage value
 # $5 = number of iterations
 #
-# Example usage: jorg 33 bin_1.fasta  myreads.fastq.gz 200 5
-#
+# Example usage: jorg 33 bin_186.fa SRX3307784_clean.fastq.gz 200 5
+# Note: the fastq file prefix needs to NOT be named the same as fasta file
+# (e.g., do not input bin_1.fasta and bin_1.fastq)
 ##################################################################
 
 echo "***Start running Jorg***"
@@ -24,12 +25,14 @@ echo "***Start running Jorg***"
 ####### Prep files #######
 
 # Get the bin ID by removing the file extension
+# filepath="bin.186.fa"
 filepath="${2}"
 filename=$(basename "$filepath")
 binID=$(echo "${filename%.*}" )
 
 # Copy original file to avoid rewriting over it
 outfile="$binID".out.fasta
+# cp bin.186.fa "$outfile"
 cp ${2} "$outfile"
 
 # Make manifest file for MIRA
@@ -50,9 +53,10 @@ for (( i = 1; i <= $5; i++ ))
 do
     echo "Start: iteration "${i}
     echo "Iteration "${i} >> iterations.txt
-    
+
     # Recruit reads with mirabait
     echo "Start: recruiting reads with mirabait"
+    # mirabait -k 33 -b "$outfile" -P SRX3307784_clean.fastq -o "$binID".fastq &> mirabait.log
     mirabait -k ${1} -b "$outfile" -P ${3} -o "$binID".fastq &> mirabait.log
     echo "End: recruiting reads with mirabait"
 
