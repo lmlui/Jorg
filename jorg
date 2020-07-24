@@ -3,30 +3,19 @@
 # Commands returning a non-zero exit code will cause an immediate exit
 set -e
 
-##################################################################
-#
-# jorg - Circularization and improvement of metagenomic bins
-#
-# Authors: Lauren Lui (lmlui@lbl.gov), Torben Nielsen, Adam Arkin
-#
-# $1 = Kmer value for baiting, default is 33
-# $2 = original bin fasta file
-# $3 = file with reads
-# $4 = minimum coverage value
-# $5 = number of iterations
-#
-# Example usage: jorg 33 bin_186.fa SRX3307784_clean.fastq.gz 200 5
-# Note: the fastq file prefix needs to NOT be named the same as fasta file
-# (e.g., do not input bin_186.fasta and bin_186.fastq)
-##################################################################
+jorg_version=1.0.0
 
 function display_version() {
-    echo "Jorg - version 1.0.0"
+    echo "$jorg_version"
     exit 1
 }
 
 function display_help() {
-    echo "Jorg - version 1.0.0"
+    echo "--------------------------------------------------------------------------"
+    echo "Jorg - Circularization and improvement of metagenomic bins - version $jorg_version"
+    echo " "
+    echo "Authors: Lauren Lui (lmlui@lbl.gov), Torben Nielsen, Adam Arkin"
+    echo "--------------------------------------------------------------------------"
     echo " "
     echo "Usage: jorg -b bin.186.fa -r SRX3307784_clean.fastq.gz -k 33 -c 200 -i 5"
     echo
@@ -38,7 +27,10 @@ function display_help() {
     echo "   -v, --version              Print version number and exit."
     echo "   -h, --help                 Show this message."
     echo " "
-    echo "Please cite: Lui LM, Nielsen TN, Arkin AP, 2020, biorxiv (https://www.biorxiv.org/content/10.1101/2020.03.05.979740v2.full)."
+    echo "Note: the fastq file prefix needs to NOT be named the same as fasta file - "
+    echo "(e.g., do not input bin_186.fasta and bin_186.fastq)"
+    echo " "
+    echo "Please cite: Lui LM, Nielsen TN, Arkin AP. 2020, biorxiv (https://www.biorxiv.org/content/10.1101/2020.03.05.979740v2.full)."
     exit 1
 }
 
@@ -177,7 +169,7 @@ write_log $logfile true true $debug "End: generating new directory named 'Iterat
 
 for (( i = 1; i <= "$iterations"; i++ ))
 do
-    write_log $logfile true true $debug "Start: iteration "${i}
+    write_log $logfile true true $debug "Start: Jorg iteration # "${i}
     echo "Iteration "${i} >> iterations.txt
 
     # Recruit reads with mirabait
@@ -240,7 +232,7 @@ do
     cp $binID.out.fasta Iterations/$binID_${i}.fasta
     write_log $logfile true true $debug "End: copy working fasta file to Iterations folder"
 
-    write_log $logfile true true $debug "End: iteration "${i}
+    write_log $logfile true true $debug "End: Jorg iteration # "${i}
 
 done
 
