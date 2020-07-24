@@ -17,10 +17,137 @@ set -e
 #
 # Example usage: jorg 33 bin_186.fa SRX3307784_clean.fastq.gz 200 5
 # Note: the fastq file prefix needs to NOT be named the same as fasta file
-# (e.g., do not input bin_1.fasta and bin_1.fastq)
+# (e.g., do not input bin_186.fasta and bin_186.fastq)
 ##################################################################
 
-echo "***Start running Jorg***"
+function display_version() {
+    echo "Jorg - version 1.0.0"
+    exit 1
+}
+
+function display_help() {
+    echo " "
+    echo "Jorg - version 1.0.0"
+    echo " "
+    echo "Usage: jorg -b bin_186.fa -r SRX3307784_clean.fastq.gz -k 33 -c 200 -i 5"
+    echo
+    echo "   -b, --bin_fasta_file       Genome bin in fasta format."
+    echo "   -r, --reads_file           Metagenome reads file in fastq or fastq.gz format."
+    echo "   -k, --kmer_length          Kmer value for baiting (default: 33)."
+    echo "   -c, --min_coverage         Minimum coverage value (default: 200)."
+    echo "   -i, --iterations           Number of iterations (default: 5)."
+    echo "   -v, --version              Print version number and exit."
+    echo "   -h, --help                 Show this message."
+    echo " "
+    echo "Please cite: Lui LM, Nielsen TN, Arkin AP, 2020, biorxiv (https://www.biorxiv.org/content/10.1101/2020.03.05.979740v2.full)."
+    echo " "
+    exit 1
+}
+
+# usage: write_log file_name append write_to_std write_to_file [message for logging...]
+function write_log () {
+    if [ $4 = true ]; then
+	      if [ $2 = true ]; then
+		        echo "${@:5}" >> $1
+	      else
+		        echo "${@:5}" > $1
+	      fi
+    fi
+    if [ $3 = true ]; then
+	      echo "${@:5}"
+    fi
+}
+
+[ $# -eq 0 ] && { display_help ; exit 1; }
+
+bin_fasta_file="NULL"
+reads_file="NULL"
+kmer_length=33
+min_coverage=200
+iterations=5
+
+while [ "$1" != "" ]; do
+    case $1 in
+        -k | --kmer_length )    shift
+                                kmer_length=$1
+                                ;;
+        -c | --min_coverage )   shift
+                                min_coverage=$1
+                                ;;
+        -i | --iterations )     shift
+                                iterations=$1
+                                ;;
+        -b | --bin_fasta_file ) shift
+                                bin_fasta_file=$1
+                                ;;
+        -r | --reads_file )     shift
+                                reads_file=$1
+                                ;;
+        -v | --version )        shift
+                                display_version
+                                exit
+                                ;;
+        -h | --help )           display_help
+                                exit
+                                ;;
+        * )                     display_help
+                                exit 1
+    esac
+    shift
+done
+
+if [[ ! "$bin_fasta_file" = *[!\ ]* ]]; then
+    echo "Input bin fasta file not defined (set using -b, --bin_fasta_file). Aborting."
+    exit 1
+fi
+
+if [[ ! "$reads_file" = *[!\ ]* ]]; then
+    echo "Input reads fastq file not defined (set using -r, --reads_file). Aborting."
+    exit 1
+fi
+
+logfile=Jorg_${bin_fasta_file}.log
+
+
+# Check for MIRA installation
+command -v mira >/dev/null 2>&1 || { echo >&2 "Unable to locate MIRA. Please make sure MIRA is installed on your system. Aborting."; exit 1; }
+
+# Check for MIRABAIT installation
+command -v mirabait >/dev/null 2>&1 || { echo >&2 "Unable to locate MIRABAIT. Please make sure MIRABAIT is installed on your system. Aborting."; exit 1; }
+
+# Check for Seqtk installation
+command -v seqtk >/dev/null 2>&1 || { echo >&2 "Unable to locate Seqtk. Please make sure Seqtk is installed on your system. Aborting."; exit 1; }
+
+# Check for other installations?
+
+# Start logging
+write_log $logfile false false $debug "Jorg run on " $(date)
+write_log $logfile true false $debug ""
+write_log $logfile true false $debug "User environment details:"
+write_log $logfile true false $debug "mira path: " $(which mira)
+write_log $logfile true false $debug "mira version: " $(mira --version 2>&1)
+write_log $logfile true false $debug "mirabait path: " $(which mirabait)
+write_log $logfile true false $debug "mirabait version: " $(mirabait --version 2>&1)
+write_log $logfile true false $debug "seqtk path: " $(which seqtk)
+write_log $logfile true false $debug "seqtk version: " $(seqtk -v 2>&1)
+# write_log $logfile true false $debug "ruby path: " $(which ruby)
+# write_log $logfile true false $debug "ruby version: " $(ruby --version)
+
+
+# Check for existence of files
+if [ ! -f "$bin_fasta_file" ]; then
+    write_log $logfile true true true bin_fasta_file file not found: $bin_fasta_file
+    write_log $logfile true true true Aborting.
+    exit 1
+fi
+
+if [ ! -f "$reads_file" ]; then
+    write_log $logfile true true true contig file not found: $reads_file
+    write_log $logfile true true true Aborting.
+    exit 1
+fi
+
+write_log $logfile true true $debug "***Start running Jorg***"
 
 ####### Prep files #######
 
@@ -36,86 +163,86 @@ outfile="$binID".out.fasta
 cp ${2} "$outfile"
 
 # Make manifest file for MIRA
-echo "Start: make manifest file for MIRA"
+write_log $logfile true true $debug "Start: make manifest file for MIRA"
 cat manifest_template.conf | sed "s/XXX/$binID/g" > manifest.conf
-echo "End: make manifest file for MIRA"
+write_log $logfile true true $debug "End: make manifest file for MIRA"
 
 # Create file for contig stats of iterations
 printf "contig_name\tlength\tGC_percent\tcumulative_length\n" > iterations.txt
 
 ####### Iterate recruiting reads and MIRA assembly #######
 
-echo "Start: generating new directory named 'Iterations'"
+write_log $logfile true true $debug "Start: generating new directory named 'Iterations'"
 mkdir -p Iterations
-echo "End: generating new directory named 'Iterations'"
+write_log $logfile true true $debug "End: generating new directory named 'Iterations'"
 
 for (( i = 1; i <= $5; i++ ))
 do
-    echo "Start: iteration "${i}
+    write_log $logfile true true $debug "Start: iteration "${i}
     echo "Iteration "${i} >> iterations.txt
 
     # Recruit reads with mirabait
-    echo "Start: recruiting reads with mirabait"
+    write_log $logfile true true $debug "Start: recruiting reads with mirabait"
     # mirabait -k 33 -b "$outfile" -P SRX3307784_clean.fastq -o "$binID".fastq &> mirabait.log
     mirabait -k ${1} -b "$outfile" -P ${3} -o "$binID".fastq &> mirabait.log
-    echo "End: recruiting reads with mirabait"
+    write_log $logfile true true $debug "End: recruiting reads with mirabait"
 
     #Check if the reads file is empty.  Seqtk will hang if the input file is empty.
-    if [ ! -s "$binID".fastq ]
-        then
-        echo "Error: fastq file empty."
+    write_log $logfile true true $debug "Start: check if fastq file empty."
+    if [ ! -s "$binID".fastq ]; then
+        write_log $logfile true true $debug "Error: fastq file empty."
         exit 1
     fi
+    write_log $logfile true true $debug "End: check if fastq file empty."
 
     # Deinterleave reads
-    echo "Start: deinterleaving reads"
+    write_log $logfile true true $debug "Start: deinterleaving reads"
     seqtk seq -1 -C ${binID}.fastq | seqtk rename - ${binID}_ | sed "s/\(^@${binID}_[0-9][0-9]*$\)/\1\/1/" > ${binID}_1.fastq
-    echo "Forward reads extracted"
+    write_log $logfile true true $debug "Forward reads extracted"
     seqtk seq -2 -C ${binID}.fastq | seqtk rename - ${binID}_ | sed "s/\(^@${binID}_[0-9][0-9]*$\)/\1\/2/" > ${binID}_2.fastq
-    echo "Reverse reads extracted"
-    echo "End: deinterleaving reads"
+    write_log $logfile true true $debug "Reverse reads extracted"
+    write_log $logfile true true $debug "End: deinterleaving reads"
 
     # Run MIRA assembly
-    echo "Start: run MIRA assembly"
+    write_log $logfile true true $debug "Start: run MIRA assembly"
     mira manifest.conf &> mira.log
-    echo "End: run MIRA assembly"
+    write_log $logfile true true $debug "End: run MIRA assembly"
 
     # Get MIRA assembly file
-    echo "Start: get MIRA assembly file"
+    write_log $logfile true true $debug "Start: get MIRA assembly file"
     cp "$binID"_assembly/"$binID"_d_results/"$binID"_out.unpadded.fasta "$binID"_MIRA.fasta
-    echo "End: get MIRA assembly file"
+    write_log $logfile true true $debug "End: get MIRA assembly file"
 
     # Get contigs that are greater than 1000bp and have coverage greater than the indicated minimum
-    echo "Start: get contigs >1000bp and with sufficient coverage"
+    write_log $logfile true true $debug "Start: get contigs >1000bp and with sufficient coverage"
     awk -v coverage_min="$4" '{if($2 >= 1000 && $6 >= coverage_min || NR == 1) print}' "$binID"_assembly/"$binID"_d_info/"$binID"_info_contigstats.txt > list.txt
-    echo "End: get contigs >1000bp and with sufficient coverage"
+    write_log $logfile true true $debug "End: get contigs >1000bp and with sufficient coverage"
 
     #Check if the outfile is empty.  Seqtk will hang if the input file is empty.
-    echo "Start: check if input fasta file empty."
-    if [ ! -s "$outfile" ]
-        then
+    write_log $logfile true true $debug "Start: check if input fasta file empty."
+    if [ ! -s "$outfile" ]; then
         echo "Error: fasta outfile empty."
         exit 1
     fi
-    echo "End: check if input fasta file empty."
+    write_log $logfile true true $debug "End: check if input fasta file empty."
 
     # Output assembly based on stats collected in list.txt
-    echo "Start: output assembly based on stats collected in list.txt"
+    write_log $logfile true true $debug "Start: output assembly based on stats collected in list.txt"
     seqtk subseq "$binID"_MIRA.fasta list.txt > "$outfile"
-    echo "End: output assembly based on stats collected in list.txt"
+    write_log $logfile true true $debug "End: output assembly based on stats collected in list.txt"
 
     # Output contig stats on assembly
     # contig_name  length  %GC  cumulative_length
-    echo "Start: output contig stats on assembly"
+    write_log $logfile true true $debug "Start: output contig stats on assembly"
     seqtk comp $binID.out.fasta | sort -k 2,2nr | awk '{printf "%-40s %8d %7.2f %8d\n", $1, $2, 100.0 * ($4 + $5)/($3 + $4 + $5 + $6), sum += $2}' >> iterations.txt
-    echo "End: output contig stats on assembly"
+    write_log $logfile true true $debug "End: output contig stats on assembly"
 
-    echo "Start: copy working fasta file to Iterations folder"
+    write_log $logfile true true $debug "Start: copy working fasta file to Iterations folder"
     cp $binID.out.fasta Iterations/$binID_${i}.fasta
-    echo "End: copy working fasta file to Iterations folder"
+    write_log $logfile true true $debug "End: copy working fasta file to Iterations folder"
 
-    echo "End: iteration "${i}
+    write_log $logfile true true $debug "End: iteration "${i}
 
 done
 
-echo "***Success, finished running Jorg***"
+write_log $logfile true true $debug "***End running Jorg***"
