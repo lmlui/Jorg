@@ -34,20 +34,6 @@ function display_help() {
     exit 1
 }
 
-# usage: write_log file_name append write_to_std write_to_file [message for logging...]
-function write_log () {
-    if [[ $4 = true ]]; then
-	      if [[ $2 = true ]]; then
-		        echo "${@:5}" >> $1
-	      else
-		        echo "${@:5}" > $1
-	      fi
-    fi
-    if [[ $3 = true ]]; then
-	      echo "${@:5}"
-    fi
-}
-
 [ $# -eq 0 ] && { display_help ; exit 1; }
 
 bin_fasta_file="NULL"
@@ -97,8 +83,7 @@ if [[ ! "$reads_file" = *[!\ ]* ]]; then
     exit 1
 fi
 
-logfile=Jorg_${bin_fasta_file}.log
-
+jorg_logfile="Jorg_${bin_fasta_file}_$(date +%c | sed 's/[: ]/-/g').log"
 
 # Check for MIRA installation
 command -v mira >/dev/null 2>&1 || { echo >&2 "Error: unable to locate MIRA. Please make sure MIRA is installed on your system. Exiting."; exit 1; }
@@ -112,33 +97,35 @@ command -v seqtk >/dev/null 2>&1 || { echo >&2 "Error: unable to locate Seqtk. P
 # Check for other installations?
 
 # Start logging
-write_log $logfile false false $debug "Jorg run on " $(date)
-write_log $logfile true false $debug ""
-write_log $logfile true false $debug "User environment details:"
-write_log $logfile true false $debug "mira path: " $(which mira)
-write_log $logfile true false $debug "mira version: " $(mira --version 2>&1)
-write_log $logfile true false $debug "mirabait path: " $(which mirabait)
-write_log $logfile true false $debug "mirabait version: " $(mirabait --version 2>&1)
-write_log $logfile true false $debug "seqtk path: " $(which seqtk)
-write_log $logfile true false $debug "seqtk version: " $(seqtk -v 2>&1)
-# write_log $logfile true false $debug "ruby path: " $(which ruby)
-# write_log $logfile true false $debug "ruby version: " $(ruby --version)
+echo " "
+echo "Writing log to "$jorg_logfile
+echo "Jorg run on " $(date) | tee -a "$jorg_logfile"
+echo "" | tee -a "$jorg_logfile"
+echo "User environment details:" | tee -a "$jorg_logfile"
+echo "mira path: " $(which mira) | tee -a "$jorg_logfile"
+echo "mira version: " $(mira --version 2>&1) | tee -a "$jorg_logfile"
+echo "mirabait path: " $(which mirabait) | tee -a "$jorg_logfile"
+echo "mirabait version: " $(mirabait --version 2>&1) | tee -a "$jorg_logfile"
+#echo "seqtk path: " $(which seqtk) | tee -a "$jorg_logfile"
+#echo "seqtk version: " $(seqtk -v 2>&1) | tee -a "$jorg_logfile"
+# echo "ruby path: " $(which ruby) | tee -a "$jorg_logfile"
+# echo "ruby version: " $(ruby --version) | tee -a "$jorg_logfile"
 
 
 # Check for existence of files
 if [ ! -f "$bin_fasta_file" ]; then
-    write_log $logfile true true true bin_fasta_file file not found: $bin_fasta_file
-    write_log $logfile true true true Exiting.
+    echo "bin_fasta_file file not found: $bin_fasta_file" | tee -a "$jorg_logfile"
+    echo "Exiting." | tee -a "$jorg_logfile"
     exit 1
 fi
 
 if [ ! -f "$reads_file" ]; then
-    write_log $logfile true true true contig file not found: $reads_file
-    write_log $logfile true true true Exiting.
+    echo "contig file not found: $reads_file" | tee -a "$jorg_logfile"
+    echo "Exiting." | tee -a "$jorg_logfile"
     exit 1
 fi
 
-write_log $logfile true true $debug "***Start running Jorg***"
+echo "***Start running Jorg***" | tee -a "$jorg_logfile"
 
 ####### Prep files #######
 
@@ -154,86 +141,86 @@ outfile="$binID".out.fasta
 cp "$bin_fasta_file" "$outfile"
 
 # Make manifest file for MIRA
-write_log $logfile true true $debug "Start: make manifest file for MIRA"
+echo "Start: make manifest file for MIRA" | tee -a "$jorg_logfile"
 cat manifest_template.conf | sed "s/XXX/$binID/g" > manifest.conf
-write_log $logfile true true $debug "End: make manifest file for MIRA"
+echo "End: make manifest file for MIRA" | tee -a "$jorg_logfile"
 
 # Create file for contig stats of iterations
 printf "contig_name\tlength\tGC_percent\tcumulative_length\n" > iterations.txt
 
 ####### Iterate recruiting reads and MIRA assembly #######
 
-write_log $logfile true true $debug "Start: generating new directory named 'Iterations'"
+echo "Start: generating new directory named 'Iterations'" | tee -a "$jorg_logfile"
 mkdir -p Iterations
-write_log $logfile true true $debug "End: generating new directory named 'Iterations'"
+echo "End: generating new directory named 'Iterations'" | tee -a "$jorg_logfile"
 
 for (( i = 1; i <= "$iterations"; i++ ))
 do
-    write_log $logfile true true $debug "Start: Jorg iteration # "${i}
+    echo "Start: Jorg iteration # "${i} | tee -a "$jorg_logfile"
     echo "Iteration "${i} >> iterations.txt
 
     # Recruit reads with mirabait
-    write_log $logfile true true $debug "Start: recruiting reads with mirabait"
+    echo "Start: recruiting reads with mirabait" | tee -a "$jorg_logfile"
     # mirabait -k 33 -b "$outfile" -P SRX3307784_clean.fastq -o "$binID".fastq &> mirabait.log
     mirabait -k "$kmer_length" -b "$outfile" -P "$reads_file" -o "$binID".fastq &> mirabait.log
-    write_log $logfile true true $debug "End: recruiting reads with mirabait"
+    echo "End: recruiting reads with mirabait" | tee -a "$jorg_logfile"
 
     #Check if the reads file is empty.  Seqtk will hang if the input file is empty.
-    write_log $logfile true true $debug "Start: check if fastq file empty."
+    echo "Start: check if fastq file empty." | tee -a "$jorg_logfile"
     if [ ! -s "$binID".fastq ]; then
-        write_log $logfile true true $debug "Error: fastq file empty."
+        echo "Error: fastq file empty." | tee -a "$jorg_logfile"
         exit 1
     fi
-    write_log $logfile true true $debug "End: check if fastq file empty."
+    echo "End: check if fastq file empty." | tee -a "$jorg_logfile"
 
     # Deinterleave reads
-    write_log $logfile true true $debug "Start: deinterleaving reads"
+    echo "Start: deinterleaving reads" | tee -a "$jorg_logfile"
     seqtk seq -1 -C ${binID}.fastq | seqtk rename - ${binID}_ | sed "s/\(^@${binID}_[0-9][0-9]*$\)/\1\/1/" > ${binID}_1.fastq
-    write_log $logfile true true $debug "Forward reads extracted"
+    echo "Forward reads extracted" | tee -a "$jorg_logfile"
     seqtk seq -2 -C ${binID}.fastq | seqtk rename - ${binID}_ | sed "s/\(^@${binID}_[0-9][0-9]*$\)/\1\/2/" > ${binID}_2.fastq
-    write_log $logfile true true $debug "Reverse reads extracted"
-    write_log $logfile true true $debug "End: deinterleaving reads"
+    echo "Reverse reads extracted" | tee -a "$jorg_logfile"
+    echo "End: deinterleaving reads" | tee -a "$jorg_logfile"
 
     # Run MIRA assembly
-    write_log $logfile true true $debug "Start: run MIRA assembly"
+    echo "Start: run MIRA assembly" | tee -a "$jorg_logfile"
     mira manifest.conf &> mira.log
-    write_log $logfile true true $debug "End: run MIRA assembly"
+    echo "End: run MIRA assembly" | tee -a "$jorg_logfile"
 
     # Get MIRA assembly file
-    write_log $logfile true true $debug "Start: get MIRA assembly file"
+    echo "Start: get MIRA assembly file" | tee -a "$jorg_logfile"
     cp "$binID"_assembly/"$binID"_d_results/"$binID"_out.unpadded.fasta "$binID"_MIRA.fasta
-    write_log $logfile true true $debug "End: get MIRA assembly file"
+    echo "End: get MIRA assembly file" | tee -a "$jorg_logfile"
 
     # Get contigs that are greater than 1000bp and have coverage greater than the indicated minimum
-    write_log $logfile true true $debug "Start: get contigs >1000bp and with sufficient coverage"
+    echo "Start: get contigs >1000bp and with sufficient coverage" | tee -a "$jorg_logfile"
     awk -v coverage_min="$min_coverage" '{if($2 >= 1000 && $6 >= coverage_min || NR == 1) print}' "$binID"_assembly/"$binID"_d_info/"$binID"_info_contigstats.txt > list.txt
-    write_log $logfile true true $debug "End: get contigs >1000bp and with sufficient coverage"
+    echo "End: get contigs >1000bp and with sufficient coverage" | tee -a "$jorg_logfile"
 
     #Check if the outfile is empty.  Seqtk will hang if the input file is empty.
-    write_log $logfile true true $debug "Start: check if input fasta file empty."
+    echo "Start: check if input fasta file empty." | tee -a "$jorg_logfile"
     if [ ! -s "$outfile" ]; then
         echo "Error: fasta outfile empty."
         exit 1
     fi
-    write_log $logfile true true $debug "End: check if input fasta file empty."
+    echo "End: check if input fasta file empty." | tee -a "$jorg_logfile"
 
     # Output assembly based on stats collected in list.txt
-    write_log $logfile true true $debug "Start: output assembly based on stats collected in list.txt"
+    echo "Start: output assembly based on stats collected in list.txt" | tee -a "$jorg_logfile"
     seqtk subseq "$binID"_MIRA.fasta list.txt > "$outfile"
-    write_log $logfile true true $debug "End: output assembly based on stats collected in list.txt"
+    echo "End: output assembly based on stats collected in list.txt" | tee -a "$jorg_logfile"
 
     # Output contig stats on assembly
     # contig_name  length  %GC  cumulative_length
-    write_log $logfile true true $debug "Start: output contig stats on assembly"
+    echo "Start: output contig stats on assembly" | tee -a "$jorg_logfile"
     seqtk comp $binID.out.fasta | sort -k 2,2nr | awk '{printf "%-40s %8d %7.2f %8d\n", $1, $2, 100.0 * ($4 + $5)/($3 + $4 + $5 + $6), sum += $2}' >> iterations.txt
-    write_log $logfile true true $debug "End: output contig stats on assembly"
+    echo "End: output contig stats on assembly" | tee -a "$jorg_logfile"
 
-    write_log $logfile true true $debug "Start: copy working fasta file to Iterations folder"
+    echo "Start: copy working fasta file to Iterations folder" | tee -a "$jorg_logfile"
     cp $binID.out.fasta Iterations/$binID_${i}.fasta
-    write_log $logfile true true $debug "End: copy working fasta file to Iterations folder"
+    echo "End: copy working fasta file to Iterations folder" | tee -a "$jorg_logfile"
 
-    write_log $logfile true true $debug "End: Jorg iteration # "${i}
+    echo "End: Jorg iteration # "${i} | tee -a "$jorg_logfile"
 
 done
 
-write_log $logfile true true $debug "***End running Jorg***"
+echo "***End running Jorg***" | tee -a "$jorg_logfile"

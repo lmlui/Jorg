@@ -28,8 +28,8 @@ Please see the manuscript ["A method for achieving complete microbial genomes an
 
 <h2> System Requirements </h2>
 <ul>
-  <li>At least XX Gb of RAM</li>
-  <li>At least XX free disk space</li>
+  <li>At least 16 Gb of RAM</li>
+  <li>At least enough free disk space as 2x the size of the input read file</li>
 </ul>
 
 <h2> Dependencies </h2>
