@@ -96,20 +96,23 @@ command -v seqtk >/dev/null 2>&1 || { echo >&2 "Error: unable to locate Seqtk. P
 
 # Check for other installations?
 
+# Capture seqtk stout
+#seqtk 2> /tmp/seqtk_version.tmp
+
 # Start logging
 echo " "
-echo "Writing log to "$jorg_logfile
+echo "Writing log to file:"$jorg_logfile
 echo "Jorg run on " $(date) | tee -a "$jorg_logfile"
 echo "" | tee -a "$jorg_logfile"
 echo "User environment details:" | tee -a "$jorg_logfile"
-echo "mira path: " $(which mira) | tee -a "$jorg_logfile"
-echo "mira version: " $(mira --version 2>&1) | tee -a "$jorg_logfile"
-echo "mirabait path: " $(which mirabait) | tee -a "$jorg_logfile"
-echo "mirabait version: " $(mirabait --version 2>&1) | tee -a "$jorg_logfile"
-#echo "seqtk path: " $(which seqtk) | tee -a "$jorg_logfile"
-#echo "seqtk version: " $(seqtk -v 2>&1) | tee -a "$jorg_logfile"
-# echo "ruby path: " $(which ruby) | tee -a "$jorg_logfile"
-# echo "ruby version: " $(ruby --version) | tee -a "$jorg_logfile"
+echo "MIRA path:" $(which mira) | tee -a "$jorg_logfile"
+echo "MIRA version:" $(mira --version | grep MIRA | sed 's/MIRA //' 2>&1) | tee -a "$jorg_logfile"
+echo "MIRABAIT path:" $(which mirabait) | tee -a "$jorg_logfile"
+echo "MIRABAIT version:" $(mirabait --version | grep MIRA | sed 's/MIRABAIT //' 2>&1) | tee -a "$jorg_logfile"
+#echo "seqtk path:" $(which seqtk) | tee -a "$jorg_logfile"
+#echo "seqtk version:" $(grep Version /tmp/seqtk_version.tmp | sed 's/Version: //' 2>&1) | tee -a "$jorg_logfile"
+# echo "ruby path:" $(which ruby) | tee -a "$jorg_logfile"
+# echo "ruby version:" $(ruby --version) | tee -a "$jorg_logfile"
 
 
 # Check for existence of files
@@ -162,7 +165,7 @@ do
     # Recruit reads with mirabait
     echo "Start: recruiting reads with mirabait" | tee -a "$jorg_logfile"
     # mirabait -k 33 -b "$outfile" -P SRX3307784_clean.fastq -o "$binID".fastq &> mirabait.log
-    mirabait -k "$kmer_length" -b "$outfile" -P "$reads_file" -o "$binID".fastq &> mirabait.log
+    mirabait -k "$kmer_length" -b "$outfile" -P "$reads_file" -o "$binID".fastq &> mirabait_iteration_${i}.log
     echo "End: recruiting reads with mirabait" | tee -a "$jorg_logfile"
 
     #Check if the reads file is empty.  Seqtk will hang if the input file is empty.
@@ -183,7 +186,7 @@ do
 
     # Run MIRA assembly
     echo "Start: run MIRA assembly" | tee -a "$jorg_logfile"
-    mira manifest.conf &> mira.log
+    mira manifest.conf &> mira_iteration_${i}.log
     echo "End: run MIRA assembly" | tee -a "$jorg_logfile"
 
     # Get MIRA assembly file
