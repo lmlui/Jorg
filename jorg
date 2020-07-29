@@ -22,7 +22,7 @@ function display_help() {
     echo "   -b, --bin_fasta_file       Genome bin in fasta format."
     echo "   -r, --reads_file           Metagenome reads file in fastq or fastq.gz format."
     echo "   -k, --kmer_length          Kmer value for baiting (default: 33)."
-    echo "   -c, --min_coverage         Minimum coverage value (default: 200)."
+    echo "   -c, --min_coverage         Minimum coverage value (default: 50)."
     echo "   -i, --iterations           Number of iterations (default: 5)."
     echo "   -v, --version              Print version number and exit."
     echo "   -h, --help                 Show this message."
@@ -40,7 +40,7 @@ bin_fasta_file="NULL"
 reads_file="NULL"
 debug=false
 kmer_length=33
-min_coverage=200
+min_coverage=50 # originally 200, may need to fix. 50 required to prevent filtering all contigs after iteration #1
 iterations=5
 
 while [ "$1" != "" ]; do
