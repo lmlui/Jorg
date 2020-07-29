@@ -200,14 +200,14 @@ do
     echo "End: get contigs >1000bp and with sufficient coverage" | tee -a "$jorg_logfile"
 
     # Check to see if any contigs passed criteria for minimum length and minimum coverage
-    if [[ $(wc -l <list.txt) -ge 3 ]]; then
-        echo "At least two contigs passed criteria for minimum length and minimum coverage - will continue attempting to close genome."
-    elif [[ $(wc -l <list.txt) -eq 2 ]]; then
-        echo "A single contig passed criteria for minimum length and minimum coverage - proceed to checking ends for a closed genome."
+    echo "Start: check for contigs passing minimum length and coverage criteria." | tee -a "$jorg_logfile"
+    if [[ $(wc -l <list.txt) -ge 2 ]]; then
+        echo "At least one contig passed criteria for minimum length and minimum coverage - will continue attempting to close genome." | tee -a "$jorg_logfile"
     else # no contigs passed criteria
-        echo "Zero contigs passed criteria for minimum length and minimum coverage. Exiting."
+        echo "Zero contigs passed criteria for minimum length and minimum coverage. Exiting." | tee -a "$jorg_logfile"
         exit 1
     fi
+    echo "End: check for contigs passing minimum length and coverage criteria." | tee -a "$jorg_logfile"
 
     #Check if the outfile is empty.  Seqtk will hang if the input file is empty.
     echo "Start: check if input fasta file empty." | tee -a "$jorg_logfile"
