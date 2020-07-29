@@ -147,9 +147,17 @@ fi
 
 # Get the bin ID by removing the file extension
 # filepath="bin.186.fa"
-filepath=${bin_fasta_file}
-filename=$(basename "$filepath")
-binID=$(echo "${filename%.*}" )
+fafilepath=${bin_fasta_file}
+fqfilepath=${reads_file}
+fafilename=$(basename "$fafilepath")
+fqfilename=$(basename "$fqfilepath")
+binID=$(echo "${fafilename%.*}" )
+fqbinID=$(echo "${fqfilename%.*}" )
+
+if [ $binID = $fqbinID ]; then
+    echo "Error: the fastq file prefix needs to NOT be named the same as fasta file. Exiting." | tee -a "$jorg_logfile"
+    exit 1
+fi
 
 # Copy original file to avoid rewriting over it
 outfile="$binID".out.fasta
