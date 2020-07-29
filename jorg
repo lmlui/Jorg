@@ -5,6 +5,17 @@ set -e
 
 jorg_version=1.0.0
 
+function ascii_text_banner() {
+    echo "        _                               __    __    __    __              "
+    echo "       | | ___  _ __ __ _              /  \  /  \  /  \  /  \             "
+    echo "___ _  | |/ _ \| '__/ _  |____________/  __\/  __\/  __\/  __\____________"
+    echo "___| |_| | (_) | | | (_| |___________/  /__/  /__/  /__/  /_______________"
+    echo "    \___/ \___/|_|  \__, |       | / \   / \   / \   / \  \____           "
+    echo "                    |___/        |/   \_/   \_/   \_/   \    o \          "
+    echo "                                                         \_____/--<       "
+}
+
+
 function display_version() {
     echo "$jorg_version"
     exit 1
@@ -12,7 +23,11 @@ function display_version() {
 
 function display_help() {
     echo "--------------------------------------------------------------------------"
-    echo "Jorg - Circularization and improvement of metagenomic bins - version $jorg_version"
+    ascii_text_banner
+    echo " "
+    echo "Jorg - Circularization and improvement of metagenomic bins"
+    echo " "
+    echo "Version: $jorg_version"
     echo " "
     echo "Authors: Lauren Lui (lmlui@lbl.gov), Torben Nielsen, Adam Arkin"
     echo "--------------------------------------------------------------------------"
@@ -128,8 +143,6 @@ if [ ! -f "$reads_file" ]; then
     exit 1
 fi
 
-echo "***Start running Jorg***" | tee -a "$jorg_logfile"
-
 ####### Prep files #######
 
 # Get the bin ID by removing the file extension
@@ -140,6 +153,9 @@ binID=$(echo "${filename%.*}" )
 
 # Copy original file to avoid rewriting over it
 outfile="$binID".out.fasta
+
+echo "***Start running Jorg***" | tee -a "$jorg_logfile"
+
 # cp bin.186.fa "$outfile"
 cp "$bin_fasta_file" "$outfile"
 
