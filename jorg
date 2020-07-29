@@ -17,7 +17,7 @@ function display_help() {
     echo "Authors: Lauren Lui (lmlui@lbl.gov), Torben Nielsen, Adam Arkin"
     echo "--------------------------------------------------------------------------"
     echo " "
-    echo "Usage: jorg -b bin.186.fa -r SRX3307784_clean.fastq.gz -k 33 -c 200 -i 5"
+    echo "Usage: jorg -b bin.186.fa -r SRX3307784_clean.fastq.gz -k 33 -c 50 -i 5"
     echo
     echo "   -b, --bin_fasta_file       Genome bin in fasta format."
     echo "   -r, --reads_file           Metagenome reads file in fastq or fastq.gz format."
@@ -198,6 +198,16 @@ do
     echo "Start: get contigs >1000bp and with sufficient coverage" | tee -a "$jorg_logfile"
     awk -v coverage_min="$min_coverage" '{if($2 >= 1000 && $6 >= coverage_min || NR == 1) print}' "$binID"_assembly/"$binID"_d_info/"$binID"_info_contigstats.txt > list.txt
     echo "End: get contigs >1000bp and with sufficient coverage" | tee -a "$jorg_logfile"
+
+    # Check to see if any contigs passed criteria for minimum length and minimum coverage
+    if [[ $(wc -l <list.txt) -ge 3 ]]; then
+        echo "At least two contigs passed criteria for minimum length and minimum coverage - will continue attempting to close genome."
+    elif [[ $(wc -l <list.txt) -eq 2 ]]; then
+        echo "A single contig passed criteria for minimum length and minimum coverage - proceed to checking ends for a closed genome."
+    else # no contigs passed criteria
+        echo "Zero contigs passed criteria for minimum length and minimum coverage. Exiting."
+        exit 1
+    fi
 
     #Check if the outfile is empty.  Seqtk will hang if the input file is empty.
     echo "Start: check if input fasta file empty." | tee -a "$jorg_logfile"
