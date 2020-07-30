@@ -35,15 +35,15 @@ function display_help() {
     echo "Authors: Lauren Lui (lmlui@lbl.gov), Torben Nielsen, Adam Arkin"
     echo "--------------------------------------------------------------------------"
     echo " "
-    echo "Usage: jorg -b bin.186.fa -r SRX3307784_clean.fastq.gz -k 33 -c 50 -i 5 -h no -s no"
+    echo "Usage: jorg -b bin.186.fa -r SRX3307784_clean.fastq.gz -k 33 -c 50 -i 5 --high_contig_num no --single_end_reads no"
     echo
     echo "   -b, --bin_fasta_file       Genome bin in fasta format."
     echo "   -r, --reads_file           Metagenome reads file in fastq or fastq.gz format."
     echo "   -k, --kmer_length          Kmer value for baiting (default: 33)."
     echo "   -c, --min_coverage         Minimum coverage value (default: 50)."
     echo "   -i, --iterations           Number of iterations (default: 5)."
-    echo "   -h, --high_contig_num      Relevant only if input assembly has >1000 contigs: are you certain that this is a single genome worth running with Jorg? (default: no)."
-    echo "   -s, --single_end_reads     Are the input reads a single-end library? (default: no)."
+    echo "   --high_contig_num          Relevant only if input assembly has >1000 contigs: are you certain that this is a single genome worth running with Jorg? (default: no)."
+    echo "   --single_end_reads         Are the input reads a single-end library? (default: no)."
     echo "   -v, --version              Print version number and exit."
     echo "   -h, --help                 Show this message."
     echo " "
@@ -92,10 +92,10 @@ while [ "$1" != "" ]; do
         -i | --iterations )        shift
                                    iterations=$1
                                    ;;
-        -h | --high_contig_num )   shift
+        --high_contig_num )        shift
                                    high_contig_num=$1
                                    ;;
-        -s | --single_end_reads )  shift
+        --single_end_reads )       shift
                                    single_end_reads=$1
                                    ;;
         -v | --version )           shift
@@ -151,9 +151,6 @@ echo "MIRABAIT path:" $(which mirabait) | tee -a "$jorg_logfile"
 echo "MIRABAIT version:" $(mirabait --version | grep MIRA | sed 's/MIRABAIT //' 2>&1) | tee -a "$jorg_logfile"
 echo "seqtk path:" $(which seqtk) | tee -a "$jorg_logfile"
 # echo "seqtk version:" $(grep Version /tmp/seqtk_version.tmp | sed 's/Version: //' 2>&1) | tee -a "$jorg_logfile"
-# echo "ruby path:" $(which ruby) | tee -a "$jorg_logfile"
-# echo "ruby version:" $(ruby --version) | tee -a "$jorg_logfile"
-
 
 # Check for existence of input fasta file
 if [ ! -f "$bin_fasta_file" ]; then
