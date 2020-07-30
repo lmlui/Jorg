@@ -42,7 +42,7 @@ function display_help() {
     echo "   -k, --kmer_length          Kmer value for baiting (default: 33)."
     echo "   -c, --min_coverage         Minimum coverage value (default: 50)."
     echo "   -i, --iterations           Number of iterations (default: 5)."
-    echo "   --high_contig_num          Relevant only if input assembly has >1000 contigs: are you certain that this is a single genome worth running with Jorg? (default: no)."
+    echo "   --high_contig_num          Relevant only if input assembly has >2500 contigs: are you certain that this is a single genome worth running with Jorg? (default: no)."
     echo "   --single_end_reads         Are the input reads a single-end library? (default: no)."
     echo "   -v, --version              Print version number and exit."
     echo "   -h, --help                 Show this message."
@@ -167,8 +167,8 @@ if [ ! -f "$reads_file" ]; then
 fi
 
 # Check for number of contigs in input fasta file
-if [ $(grep -c "^>" "$bin_fasta_files") -gt 1000 ] && [ ! $(echo "$high_contig_num") == "no" ];
-    echo "Number of contigs found in bin_fasta_file greater than 1000." | tee -a "$jorg_logfile"
+if [ $(grep -c "^>" "$bin_fasta_files") -gt 2500 ] && [ ! $(echo "$high_contig_num") == "no" ];
+    echo "Number of contigs found in bin_fasta_file greater than 2500." | tee -a "$jorg_logfile"
     echo "Are you certain this is a single genome? If yes, rerun with --high_contig_num 'no' flag" | tee -a "$jorg_logfile"
     echo "Exiting." | tee -a "$jorg_logfile"
     exit 1
@@ -219,7 +219,8 @@ echo "End: generating new directory named 'Iterations'" | tee -a "$jorg_logfile"
 
 
 for (( i = 1; i <= "$iterations"; i++ )); do
-    echo "Start: Jorg iteration # "${i} | tee -a "$jorg_logfile"
+    echo " " | tee -a "$jorg_logfile"
+    echo "*Start: Jorg iteration # "${i}"*" | tee -a "$jorg_logfile"
     jorg_iteration_time_start=$(date +%s)
     echo "Iteration "${i} >> iterations.txt
 
