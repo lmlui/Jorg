@@ -28,7 +28,7 @@ Please see the manuscript ["A method for achieving complete microbial genomes an
 
 <h2> System Requirements </h2>
 <ul>
-  <li>At least 16 Gb of RAM</li>
+  <li>At least 8 Gb of RAM</li>
   <li>At least enough free disk space as 2x the size of the input read file</li>
 </ul>
 
@@ -101,7 +101,7 @@ Criteria for picking a bin:
   <li> <b> A bin with <10 contigs. </b> We recommend picking a bin that has fewer than 10 contigs to increase success, but you can pick any bin and likely it will be improved using this method. We made exceptions for bins that looked promising, such as a bin with many contigs, but with one or two large contigs that comprise most of the bin’s sequence length  </li>
   <li> <b> The bin has an average coverage >30X. </b> Higher coverage is better for success.  If you didn't get the coverage from your binning output, use bwa to map reads to the longest contig to help determine the coverage. Typically this is a good coverage estimate.
  </ol>   
-<h2> Use the Jorg script to iterate mapping reads to the bin with mirabait and reassemble with MIRA</h2>
+<h2> Use the Jorg script to iterate mapping reads to the bin with mirabait and reassemble with MIRA. Note: typically it takes at least several hours for each iteration of Jorg to run, so jobs using a high number of iterations may take multiple days.</h2>
 
   <h3> Overview</h3>
 
