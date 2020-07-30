@@ -167,13 +167,19 @@ if [ ! -f "$reads_file" ]; then
 fi
 
 # Check for number of contigs in input fasta file
-if [ $(grep -c "^>" "$bin_fasta_files") -gt 2500 ] && [ ! $(echo "$high_contig_num") == "no" ];
+if [ $(grep -c "^>" "$bin_fasta_files") -gt 2500 ] && [ ! $(echo "$high_contig_num") == "no" ]; then
     echo "Number of contigs found in bin_fasta_file greater than 2500." | tee -a "$jorg_logfile"
     echo "Are you certain this is a single genome? If yes, rerun with --high_contig_num 'no' flag" | tee -a "$jorg_logfile"
     echo "Exiting." | tee -a "$jorg_logfile"
     exit 1
 fi
 
+# Until single-end mode developed and tested, Jorg should exist when it encounters single-end reads
+if [ ! $(echo "$single_end_reads") == "no" ]; then
+    echo "Jorg is not compatible for single-end reads - this feature is under active development." | tee -a "$jorg_logfile"
+    echo "Exiting." | tee -a "$jorg_logfile"
+    exit 1
+fi
 
 # Jorg variable declarations
 # Get the bin ID by removing the file extension
