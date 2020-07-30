@@ -35,15 +35,19 @@ function display_help() {
     echo "Authors: Lauren Lui (lmlui@lbl.gov), Torben Nielsen, Adam Arkin"
     echo "--------------------------------------------------------------------------"
     echo " "
-    echo "Usage: jorg -b bin.186.fa -r SRX3307784_clean.fastq.gz -k 33 -c 50 -i 5"
+    echo "Usage: jorg -b bin.186.fa -r SRX3307784_clean.fastq.gz -k 33 -c 50 -i 5 -h no -s no"
     echo
     echo "   -b, --bin_fasta_file       Genome bin in fasta format."
     echo "   -r, --reads_file           Metagenome reads file in fastq or fastq.gz format."
     echo "   -k, --kmer_length          Kmer value for baiting (default: 33)."
     echo "   -c, --min_coverage         Minimum coverage value (default: 50)."
     echo "   -i, --iterations           Number of iterations (default: 5)."
+    echo "   -h, --high_contig_num      Relevant only if input assembly has >1000 contigs: are you certain that this is a single genome worth running with Jorg? (default: no)."
+    echo "   -s, --single_end_reads     Are the input reads a single-end library? (default: no)."
     echo "   -v, --version              Print version number and exit."
     echo "   -h, --help                 Show this message."
+    echo " "
+    echo "Extended Usage: jorg --bin_fasta_file bin.186.fa --reads_file SRX3307784_clean.fastq.gz --kmer_length 33 --min_coverage 50 --iterations 5 --high_contig_num no --single_end_reads no"
     echo " "
     echo "Please cite: Lui LM, Nielsen TN, Arkin AP. 2020, biorxiv (https://www.biorxiv.org/content/10.1101/2020.03.05.979740v2.full)."
     exit 1
@@ -55,38 +59,54 @@ function display_help() {
 # Jorg variable declarations
 bin_fasta_file="NULL"
 reads_file="NULL"
-debug=false
 kmer_length=33
 min_coverage=50 # originally 200, may need to fix. 50 required to prevent filtering all contigs after iteration #1
 iterations=5
+single_end_reads="no"
+
+# Convert relevant abnormal entrees for high_contig_num variable
+if [ ! $(echo "$high_contig_num") == "n" ] || [ ! $(echo "$high_contig_num") == "N" ] || [ ! $(echo "$high_contig_num") == "No" ]; then
+    high_contig_num="no"
+fi
+
+# Convert relevant abnormal entrees for single_end_reads variable
+if [ ! $(echo "$single_end_reads") == "n" ] || [ ! $(echo "$single_end_reads") == "N" ] || [ ! $(echo "$single_end_reads") == "No" ]; then
+    single_end_reads="no"
+fi
 
 # Read input parameters and designate variables
 while [ "$1" != "" ]; do
     case $1 in
-        -k | --kmer_length )    shift
-                                kmer_length=$1
-                                ;;
-        -c | --min_coverage )   shift
-                                min_coverage=$1
-                                ;;
-        -i | --iterations )     shift
-                                iterations=$1
-                                ;;
-        -b | --bin_fasta_file ) shift
-                                bin_fasta_file=$1
-                                ;;
-        -r | --reads_file )     shift
-                                reads_file=$1
-                                ;;
-        -v | --version )        shift
-                                display_version
-                                exit
-                                ;;
-        -h | --help )           display_help
-                                exit
-                                ;;
-        * )                     display_help
-                                exit 1
+        -b | --bin_fasta_file )    shift
+                                   bin_fasta_file=$1
+                                   ;;
+        -r | --reads_file )        shift
+                                   reads_file=$1
+                                   ;;
+        -k | --kmer_length )       shift
+                                   kmer_length=$1
+                                   ;;
+        -c | --min_coverage )      shift
+                                   min_coverage=$1
+                                   ;;
+        -i | --iterations )        shift
+                                   iterations=$1
+                                   ;;
+        -h | --high_contig_num )   shift
+                                   high_contig_num=$1
+                                   ;;
+        -s | --single_end_reads )  shift
+                                   single_end_reads=$1
+                                   ;;
+        -v | --version )           shift
+                                   display_version
+                                   exit
+                                   ;;
+        -h | --help )              display_help
+                                   exit
+                                   ;;
+        * )                        display_help
+                                   exit 1
     esac
     shift
 done
@@ -149,6 +169,15 @@ if [ ! -f "$reads_file" ]; then
     exit 1
 fi
 
+# Check for number of contigs in input fasta file
+if [ $(grep -c "^>" "$bin_fasta_files") -gt 1000 ] && [ ! $(echo "$high_contig_num") == "no" ];
+    echo "Number of contigs found in bin_fasta_file greater than 1000." | tee -a "$jorg_logfile"
+    echo "Are you certain this is a single genome? If yes, rerun with --high_contig_num 'no' flag" | tee -a "$jorg_logfile"
+    echo "Exiting." | tee -a "$jorg_logfile"
+    exit 1
+fi
+
+
 # Jorg variable declarations
 # Get the bin ID by removing the file extension
 # fafilepath="bin.186.fa"
@@ -159,7 +188,6 @@ fafilename=$(basename "$fafilepath")
 fqfilename=$(basename "$fqfilepath")
 binID=$(echo "${fafilename%.*}" )
 fqbinID=$(echo $fqfilename | sed 's/\.fastq.gz//' | sed 's/\.fq.gz//' ) # may need better solution to remove .fq.gz and .fastq.gz
-
 
 # Check for fasta and fastq files having the same prefix, causes errors during mirabait step below
 if [ $binID = $fqbinID ]; then
