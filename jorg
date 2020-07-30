@@ -158,7 +158,8 @@ fqfilepath=${reads_file}
 fafilename=$(basename "$fafilepath")
 fqfilename=$(basename "$fqfilepath")
 binID=$(echo "${fafilename%.*}" )
-fqbinID=$(echo "${fqfilename%.*}" )
+fqbinID=$(echo $fqfilename | sed 's/\.fastq.gz//' | sed 's/\.fq.gz//' ) # may need better solution to remove .fq.gz and .fastq.gz
+
 
 # Check for fasta and fastq files having the same prefix, causes errors during mirabait step below
 if [ $binID = $fqbinID ]; then
