@@ -168,7 +168,7 @@ if [ ! -f "$reads_file" ]; then
 fi
 
 # Check for number of contigs in input fasta file
-if [[ $(grep -c "^>" "$bin_fasta_files") -gt 2500 ]] && [[ ! $(echo "$high_contig_num") == "no" ]]; then
+if [[ $(grep -c "^>" "$bin_fasta_file") -gt 2500 ]] && [[ ! $(echo "$high_contig_num") == "no" ]]; then
     echo "Number of contigs found in bin_fasta_file greater than 2500." | tee -a "$jorg_logfile"
     echo "Are you certain this is a single genome? If yes, rerun with --high_contig_num 'no' flag" | tee -a "$jorg_logfile"
     echo "Exiting." | tee -a "$jorg_logfile"
