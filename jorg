@@ -62,6 +62,7 @@ reads_file="NULL"
 kmer_length=33
 min_coverage=50 # originally 200, may need to fix. 50 required to prevent filtering all contigs after iteration #1
 iterations=5
+high_contig_num="no"
 single_end_reads="no"
 
 # Convert relevant abnormal entrees for high_contig_num variable
