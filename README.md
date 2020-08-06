@@ -130,9 +130,9 @@ Criteria for picking a bin:
 * An example of running the script is
 
 ```bash
-jorg 33 bin1.fasta myreads.fastq.gz 200 10
+jorg -b bin.186.fa -r SRX3307784_clean.fastq.gz -k 33 -c 50 -i 5 --high_contig_num no --single_end_reads no
 ```
-where 33 is the kmer value, bin1.fasta is the fasta file with contigs, myreads.fastq.gz are your interleaved sequencing reads that have been trimmed and quality checked, 200 is the minimum coverage value, and 10 is the number of iterations.
+where 33 is the kmer value, bin.186.fa is the fasta file with contigs, SRX3307784_clean.fastq.gz are your interleaved sequencing reads that have been trimmed and quality checked, 50 is the minimum coverage value, and 5 is the number of iterations.
 * Output:
   * `mirabait.log` - log file from `mirabait`.  This is extremely helpful if you are getting errors at this step.
   * `mira.log` - log file from `mira`.
@@ -152,7 +152,7 @@ where 33 is the kmer value, bin1.fasta is the fasta file with contigs, myreads.f
 <h3>Circularization</h3>
 You find a single contig with a significant - and exact - repeat at the ends. In addition, we required that the repeat be at least 100 nt in length, is longer than any other repeat in the contig, and does not match any of the other repeats.
 
-See the script `make_assembly_db` for an automated look at the location and length of repeats in a genome.  This script requires that LAST is installed.
+See the script `circle_check_using_last` for an automated look at the location and length of repeats in a genome.  This script requires that LAST is installed.
 
 <h3>Idempotence</h3>
 You observe no change in the assembled contigs after a round of read pair extraction and reassembly with MIRA.
