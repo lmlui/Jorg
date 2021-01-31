@@ -125,12 +125,10 @@ Criteria for picking a bin:
 
  <h3>Using the script</h3>
 
-* Make sure that the `manifest_template.conf` file is in the same directory.
-
 * An example of running the script is
 
 ```bash
-jorg -b bin.186.fa -r SRX3307784_clean.fastq.gz -k 33 -c 50 -i 5 --high_contig_num no --single_end_reads no
+jorg -b bin.186.fa -r SRX3307784_clean.fastq.gz -k 33 -c 50 -i 5 --high_contig_num no 
 ```
 where 33 is the kmer value, bin.186.fa is the fasta file with contigs, SRX3307784_clean.fastq.gz are your interleaved sequencing reads that have been trimmed and quality checked, 50 is the minimum coverage value, and 5 is the number of iterations.
 * Output:
