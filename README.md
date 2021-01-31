@@ -14,6 +14,8 @@ Contact Lauren with questions (lmlui at lbl dot gov).
 
 Please see the manuscript ["A method for achieving complete microbial genomes and better quality bins from metagenomics data" on bioRxiv](https://www.biorxiv.org/content/10.1101/2020.03.05.979740v2.full) and cite it if you use this method.
 
+We thank Sean Jungbluth for helping extend the code for use in the DOE Systems Biology KnowledgeBase.
+
 <h1>Overview of Method </h1>
 
 <p align="center">
