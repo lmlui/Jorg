@@ -35,7 +35,7 @@ function display_help() {
     echo "Authors: Lauren Lui (lmlui@lbl.gov), Torben Nielsen, Adam Arkin"
     echo "--------------------------------------------------------------------------"
     echo " "
-    echo "Usage: jorg -b bin.186.fa -r SRX3307784_clean.fastq.gz -k 33 -c 50 -i 5 --high_contig_num no --single_end_reads no"
+    echo "Usage: jorg -b bin.186.fa -r SRX3307784_clean.fastq.gz -k 33 -c 50 -i 5 --high_contig_num no"
     echo
     echo "   -b, --bin_fasta_file       Genome bin in fasta format."
     echo "   -r, --reads_file           Metagenome reads file in fastq or fastq.gz format."
@@ -43,11 +43,10 @@ function display_help() {
     echo "   -c, --min_coverage         Minimum coverage value (default: 50)."
     echo "   -i, --iterations           Number of iterations (default: 5)."
     echo "   --high_contig_num          Relevant only if input assembly has >2500 contigs: are you certain that this is a single genome worth running with Jorg? (default: no)."
-    echo "   --single_end_reads         Are the input reads a single-end library? (default: no)."
     echo "   -v, --version              Print version number and exit."
     echo "   -h, --help                 Show this message."
     echo " "
-    echo "Extended Usage: jorg --bin_fasta_file bin.186.fa --reads_file SRX3307784_clean.fastq.gz --kmer_length 33 --min_coverage 50 --iterations 5 --high_contig_num no --single_end_reads no"
+    echo "Extended Usage: jorg --bin_fasta_file bin.186.fa --reads_file SRX3307784_clean.fastq.gz --kmer_length 33 --min_coverage 50 --iterations 5 --high_contig_num no "
     echo " "
     echo "Please cite: Lui LM, Nielsen TN, Arkin AP. 2020, biorxiv (https://www.biorxiv.org/content/10.1101/2020.03.05.979740v2.full)."
     exit 1
@@ -63,17 +62,12 @@ kmer_length=33
 min_coverage=50 # originally 200, may need to fix. 50 required to prevent filtering all contigs after iteration #1
 iterations=5
 high_contig_num="no"
-single_end_reads="no"
 
 # Convert relevant abnormal entrees for high_contig_num variable
 if [ ! $(echo "$high_contig_num") == "n" ] || [ ! $(echo "$high_contig_num") == "N" ] || [ ! $(echo "$high_contig_num") == "No" ]; then
     high_contig_num="no"
 fi
 
-# Convert relevant abnormal entrees for single_end_reads variable
-if [ ! $(echo "$single_end_reads") == "n" ] || [ ! $(echo "$single_end_reads") == "N" ] || [ ! $(echo "$single_end_reads") == "No" ]; then
-    single_end_reads="no"
-fi
 
 # Read input parameters and designate variables
 while [ "$1" != "" ]; do
@@ -95,9 +89,6 @@ while [ "$1" != "" ]; do
                                    ;;
         --high_contig_num )        shift
                                    high_contig_num=$1
-                                   ;;
-        --single_end_reads )       shift
-                                   single_end_reads=$1
                                    ;;
         -v | --version )           shift
                                    display_version
@@ -171,13 +162,6 @@ fi
 if [[ $(grep -c "^>" "$bin_fasta_file") -gt 2500 ]] && [[ ! $(echo "$high_contig_num") == "no" ]]; then
     echo "Number of contigs found in bin_fasta_file greater than 2500." | tee -a "$jorg_logfile"
     echo "Are you certain this is a single genome? If yes, rerun with --high_contig_num 'no' flag" | tee -a "$jorg_logfile"
-    echo "Exiting." | tee -a "$jorg_logfile"
-    exit 1
-fi
-
-# Until single-end mode developed and tested, Jorg should exist when it encounters single-end reads
-if [[ ! $(echo "$single_end_reads") == "no" ]]; then
-    echo "Jorg is not compatible for single-end reads - this feature is under active development." | tee -a "$jorg_logfile"
     echo "Exiting." | tee -a "$jorg_logfile"
     exit 1
 fi
