@@ -36,9 +36,13 @@ function display_help() {
     echo "--------------------------------------------------------------------------"
     echo " "
     echo "Usage: jorg -b bin.186.fa -r SRX3307784_clean.fastq.gz -k 33 -c 50 -i 5 --high_contig_num no"
+    echo "or"
+    echo "Usage: jorg -b bin.186.fa --forward SRX3307784_1.fastq.gz --reverse SRX3307784_2.fastq.gz -k 33 -c 50 -i 5 --high_contig_num no"
     echo
     echo "   -b, --bin_fasta_file       Genome bin in fasta format."
-    echo "   -r, --reads_file           Metagenome reads file in fastq or fastq.gz format."
+    echo "   -r, --reads_file           Interleaved metagenome reads file in fastq or fastq.gz format."
+    echo "   --foward                   Forward reads file in fastq or fastq.gz format."
+    echo "   --reverse                  Reverse reads file in fastq or fastq.gz format."
     echo "   -k, --kmer_length          Kmer value for baiting (default: 33)."
     echo "   -c, --min_coverage         Minimum coverage value (default: 50)."
     echo "   -i, --iterations           Number of iterations (default: 5)."
@@ -47,6 +51,8 @@ function display_help() {
     echo "   -h, --help                 Show this message."
     echo " "
     echo "Extended Usage: jorg --bin_fasta_file bin.186.fa --reads_file SRX3307784_clean.fastq.gz --kmer_length 33 --min_coverage 50 --iterations 5 --high_contig_num no "
+    echo "or"
+    echo "jorg --bin_fasta_file bin.186.fa --forward SRX3307784_1.fastq.gz --reverse SRX3307784_2.fastq.gz --kmer_length 33 --min_coverage 50 --iterations 5 --high_contig_num no "
     echo " "
     echo "Please cite: Lui LM, Nielsen TN, Arkin AP. 2020, biorxiv (https://www.biorxiv.org/content/10.1101/2020.03.05.979740v2.full)."
     exit 1
@@ -58,6 +64,8 @@ function display_help() {
 # Jorg variable declarations
 bin_fasta_file="NULL"
 reads_file="NULL"
+reads_foward="NULL"
+reads_reverse="NULL"
 kmer_length=33
 min_coverage=50 # originally 200, may need to fix. 50 required to prevent filtering all contigs after iteration #1
 iterations=5
@@ -78,6 +86,12 @@ while [ "$1" != "" ]; do
         -r | --reads_file )        shift
                                    reads_file=$1
                                    ;;
+        --forward  )               shift 
+                                   reads_forward=$1 
+                                   ;;    
+        --reverse   )              shift 
+                                   reads_reverse=$1 
+                                   ;; 
         -k | --kmer_length )       shift
                                    kmer_length=$1
                                    ;;
@@ -110,8 +124,8 @@ if [[ ! "$bin_fasta_file" = *[!\ ]* ]]; then
 fi
 
 # Check for existence of input fastq reads file
-if [[ ! "$reads_file" = *[!\ ]* ]]; then
-    echo "Input reads fastq file not defined (set using -r, --reads_file). Exiting."
+if [[ ! "$reads_file" = *[!\ ]* ]] || [[ ! "$reads_forward" = *[!\ ]* ]] || [[ ! "$reads_reverse" = *[!\ ]* ]] ; then
+    echo "Input reads fastq file not defined (set using -r, --reads_file or --foward and --reverse for paired end reads). Exiting."
     exit 1
 fi
 
@@ -152,10 +166,14 @@ if [ ! -f "$bin_fasta_file" ]; then
 fi
 
 # Check for existence of input reads fastq file
-if [ ! -f "$reads_file" ]; then
-    echo "contig file not found: $reads_file" | tee -a "$jorg_logfile"
-    echo "Exiting." | tee -a "$jorg_logfile"
-    exit 1
+if [ ! -f "$reads_file" ] 
+then
+    if  [ ! -f "$reads_forward" ] || [ ! -f "$reads_reverse" ]
+    then
+        echo "contig file not found: reads file(s)" | tee -a "$jorg_logfile"
+        echo "Exiting." | tee -a "$jorg_logfile"
+        exit 1
+    fi
 fi
 
 # Check for number of contigs in input fasta file
@@ -171,11 +189,17 @@ fi
 # fafilepath="bin.186.fa"
 # fqfilepath="SRX3307784_clean.fastq.gz"
 fafilepath=${bin_fasta_file}
-fqfilepath=${reads_file}
+#This is only a temporary fix; mirabait allows for paired end reads but we have to work out the 
+if [ "$reads_file" == "NULL" ] 
+then  
+        fqfilepath=${reads_forward}   #probably should be finessed a little more  
+else 
+        fqfilepath=${reads_file}  
+fi 
 fafilename=$(basename "$fafilepath")
 fqfilename=$(basename "$fqfilepath")
 binID=$(echo "${fafilename%.*}" )
-fqbinID=$(echo $fqfilename | sed 's/\.fastq.gz//' | sed 's/\.fq.gz//' ) # may need better solution to remove .fq.gz and .fastq.gz
+fqbinID=$(echo $fqfilename | sed 's/\.fastq.gz//' | sed 's/\.fq.gz//' | sed 's/\.fastq//' | sed 's/\.fq//' ) # may need better solution to remove .fq.gz and .fastq.gz
 
 # Check for fasta and fastq files having the same prefix, causes errors during mirabait step below
 if [ $binID = $fqbinID ]; then
@@ -219,7 +243,14 @@ for (( i = 1; i <= "$iterations"; i++ )); do
     mirabait_time_start=$(date +%s)
     echo "Start: recruiting reads with mirabait" | tee -a "$jorg_logfile"
     # mirabait -k 33 -b "$outfile" -P SRX3307784_clean.fastq -o "$binID".fastq &> mirabait.log
-    mirabait -k "$kmer_length" -b "$outfile" -P "$reads_file" -o "$binID".fastq &> mirabait_iteration_${i}.log
+    
+    if [ "$reads_file" == "NULL" ] 
+    then  
+            mirabait -k "$kmer_length" -b "$outfile" -p "$reads_forward" "$reads_reverse" -o "$binID".fastq &> mirabait_iteration_${i}.log
+    else
+            mirabait -k "$kmer_length" -b "$outfile" -P "$reads_file" -o "$binID".fastq &> mirabait_iteration_${i}.log
+    fi
+    
     mirabait_time_elapsed=$(( $(date +%s) - $mirabait_time_start ))
     echo "End: recruiting reads with mirabait" - $mirabait_time_elapsed" seconds elapsed." | tee -a "$jorg_logfile"
 
