@@ -71,12 +71,6 @@ min_coverage=50 # originally 200, may need to fix. 50 required to prevent filter
 iterations=5
 high_contig_num="no"
 
-# Convert relevant abnormal entrees for high_contig_num variable
-if [ ! $(echo "$high_contig_num") == "n" ] || [ ! $(echo "$high_contig_num") == "N" ] || [ ! $(echo "$high_contig_num") == "No" ]; then
-    high_contig_num="no"
-fi
-
-
 # Read input parameters and designate variables
 while [ "$1" != "" ]; do
     case $1 in
@@ -117,6 +111,11 @@ while [ "$1" != "" ]; do
     shift
 done
 
+# Convert relevant abnormal entrees for high_contig_num variable
+if [ ! "$high_contig_num" == "n" ] || [ ! "$high_contig_num" == "N" ] || [ ! "$high_contig_num" == "No" ]; then
+    high_contig_num="no"
+fi
+
 # Check for existence of input fasta file
 if [[ ! "$bin_fasta_file" = *[!\ ]* ]]; then
     echo "Input bin fasta file not defined (set using -b, --bin_fasta_file). Exiting."
@@ -147,15 +146,15 @@ command -v seqtk >/dev/null 2>&1 || { echo >&2 "Error: unable to locate Seqtk. P
 # Start logging and timer
 jorg_time_start=$(date +%s)
 echo " "
-echo "Writing log to file:"$jorg_logfile
-echo "Jorg run on " $(date) | tee -a "$jorg_logfile"
+echo "Writing log to file: $jorg_logfile"
+echo "Jorg run on $(date)" | tee -a "$jorg_logfile"
 echo "" | tee -a "$jorg_logfile"
 echo "User environment details:" | tee -a "$jorg_logfile"
-echo "MIRA path:" $(which mira) | tee -a "$jorg_logfile"
-echo "MIRA version:" $(mira --version | grep MIRA | sed 's/MIRA //' 2>&1) | tee -a "$jorg_logfile"
-echo "MIRABAIT path:" $(which mirabait) | tee -a "$jorg_logfile"
-echo "MIRABAIT version:" $(mirabait --version | grep MIRA | sed 's/MIRABAIT //' 2>&1) | tee -a "$jorg_logfile"
-echo "seqtk path:" $(which seqtk) | tee -a "$jorg_logfile"
+echo "MIRA path: $(which mira)" | tee -a "$jorg_logfile"
+echo "MIRA version: $(mira --version | grep MIRA | sed 's/MIRA //' 2>&1)" | tee -a "$jorg_logfile"
+echo "MIRABAIT path: $(which mirabait)" | tee -a "$jorg_logfile"
+echo "MIRABAIT version: $(mirabait --version | grep MIRA | sed 's/MIRABAIT //' 2>&1)" | tee -a "$jorg_logfile"
+echo "seqtk path: $(which seqtk)" | tee -a "$jorg_logfile"
 # echo "seqtk version:" $(grep Version /tmp/seqtk_version.tmp | sed 's/Version: //' 2>&1) | tee -a "$jorg_logfile"
 
 # Check for existence of input fasta file
@@ -177,7 +176,7 @@ then
 fi
 
 # Check for number of contigs in input fasta file
-if [[ $(grep -c "^>" "$bin_fasta_file") -gt 2500 ]] && [[ ! $(echo "$high_contig_num") == "no" ]]; then
+if [[ $(grep -c "^>" "$bin_fasta_file") -gt 2500 ]] && [[ ! "$high_contig_num" == "no" ]]; then
     echo "Number of contigs found in bin_fasta_file greater than 2500." | tee -a "$jorg_logfile"
     echo "Are you certain this is a single genome? If yes, rerun with --high_contig_num 'no' flag" | tee -a "$jorg_logfile"
     echo "Exiting." | tee -a "$jorg_logfile"
@@ -235,7 +234,7 @@ echo "End: generating new directory named 'Iterations'" | tee -a "$jorg_logfile"
 
 for (( i = 1; i <= "$iterations"; i++ )); do
     echo " " | tee -a "$jorg_logfile"
-    echo "*Start: Jorg iteration # "${i}"*" | tee -a "$jorg_logfile"
+    echo "*Start: Jorg iteration # ${i}*" | tee -a "$jorg_logfile"
     jorg_iteration_time_start=$(date +%s)
     echo "Iteration "${i} >> iterations.txt
 
