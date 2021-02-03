@@ -106,6 +106,7 @@ Criteria for picking a bin:
 <h2> Use the Jorg script to iterate mapping reads to the bin with mirabait and reassemble with MIRA. Note: typically it takes at least several hours for each iteration of Jorg to run, so jobs using a high number of iterations may take multiple days.</h2>
 
   <h3> Overview</h3>
+ 
 
   The Jorg script will do the following:
 
@@ -127,6 +128,7 @@ Criteria for picking a bin:
 
  <h3>Using the script</h3>
 
+* Make sure that the `manifest_template.conf` file is in the same directory.
 * An example of running the script is
 
 ```bash
