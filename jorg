@@ -171,26 +171,21 @@ if [ "$bin_fasta_file" = "NULL" ]; then
 fi
 
 # Check for existence of input fastq reads file
-if [ "$reads_file" = "NULL" ]
-then
-    if [ "$reads_forward" = "NULL" ] && [ "$reads_reverse" = "NULL" ] 
-    then
+if [ "$reads_file" = "NULL" ]; then
+    if [ "$reads_forward" = "NULL" ] && [ "$reads_reverse" = "NULL" ]; then
         echo "Input reads fastq file not defined (set using -r, --reads_file or --foward and --reverse for paired end reads). Exiting."
-            exit 1
-    elif [ "$reads_forward" = "NULL" ]
-        then
-                echo "Are you missing the forward reads file? Input reads fastq file not defined (set using -r, --reads_file or --foward and --reverse for paired end reads). Exiting."
-                exit 1
-    elif [ "$reads_reverse" = "NULL" ]
-    then
+        exit 1
+    elif [ "$reads_forward" = "NULL" ]; then
+        echo "Are you missing the forward reads file? Input reads fastq file not defined (set using -r, --reads_file or --foward and --reverse for paired end reads). Exiting."
+        exit 1
+    elif [ "$reads_reverse" = "NULL" ]; then
         echo "Are you missing the reverse reads file? Input reads fastq file not defined (set using -r, --reads_file or --foward and --reverse for paired end reads). Exiting."
-                exit 1 
+        exit 1 
     fi
 fi
 
 #Check for manifest template file
-if [ ! -e "manifest_template.conf" ] 
-then 
+if [ ! -e "manifest_template.conf" ]; then 
     echo "Missing manifest_template.conf file.  Copy it into current directory."
     exit 1
 fi
@@ -224,10 +219,8 @@ if [ ! -f "$bin_fasta_file" ]; then
 fi
 
 # Check for existence of input reads fastq file
-if [ ! -f "$reads_file" ] 
-then
-    if  [ ! -f "$reads_forward" ] || [ ! -f "$reads_reverse" ]
-    then
+if [ ! -f "$reads_file" ]; then
+    if  [ ! -f "$reads_forward" ] || [ ! -f "$reads_reverse" ]; then
         echo "File not found: reads file(s)" | tee -a "$jorg_logfile"
         echo "Exiting." | tee -a "$jorg_logfile"
         exit 1
