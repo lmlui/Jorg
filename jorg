@@ -1,4 +1,16 @@
 #!/usr/bin/env bash
+################################################################################
+#
+# GNU General Public License v3.0
+# Code written by Lauren Lui, Torben Nielsen, and Sean Jungbluth
+# https://github.com/lmlui/Jorg/
+#
+# Contact Lauren Lui with questions (lmlui@lbl.gov)
+#
+# Jorg is a script that uses the assembler MIRA to help circularize 
+#   metagenome-assembled genomes, but can also be used to improve bins
+#
+################################################################################
 
 # Commands returning a non-zero exit code will cause an immediate exit
 set -e
@@ -6,7 +18,9 @@ set -e
 # Software version, starting at 1.0.0
 jorg_version=1.0.0
 
+################################################################################
 # Menu banner
+################################################################################
 function ascii_text_banner() {
     echo "        _                               __    __    __    __              "
     echo "       | | ___  _ __ __ _              /  \  /  \  /  \  /  \             "
@@ -16,14 +30,17 @@ function ascii_text_banner() {
     echo "                    |___/        |/   \_/   \_/   \_/   \    o \          "
     echo "                                                         \_____/--<       "
 }
-
+################################################################################
 # Version reporting
+################################################################################
 function display_version() {
     echo "$jorg_version"
     exit 1
 }
 
+################################################################################
 # Help menu
+################################################################################
 function display_help() {
     echo "--------------------------------------------------------------------------"
     ascii_text_banner
@@ -35,10 +52,14 @@ function display_help() {
     echo "Authors: Lauren Lui (lmlui@lbl.gov), Torben Nielsen, Adam Arkin"
     echo "--------------------------------------------------------------------------"
     echo " "
-    echo "Usage: jorg -b bin.186.fa -r SRX3307784_clean.fastq.gz -k 33 -c 50 -i 5 --high_contig_num no --single_end_reads no"
+    echo "Usage: jorg -b bin.186.fa -r interleaved_reads.fastq.gz -k 33 -c 50 -i 5 --high_contig_num no"
+    echo "or"
+    echo "Usage: jorg -b bin.186.fa --forward reads_1.fastq.gz --reverse reads_2.fastq.gz -k 33 -c 50 -i 5 --high_contig_num no"
     echo
     echo "   -b, --bin_fasta_file       Genome bin in fasta format."
-    echo "   -r, --reads_file           Metagenome reads file in fastq or fastq.gz format."
+    echo "   -r, --reads_file           Interleaved metagenome reads file in fastq or fastq.gz format."
+    echo "   --foward                   Forward reads file in fastq or fastq.gz format."
+    echo "   --reverse                  Reverse reads file in fastq or fastq.gz format."
     echo "   -k, --kmer_length          Kmer value for baiting (default: 33)."
     echo "   -c, --min_coverage         Minimum coverage value (default: 50)."
     echo "   -i, --iterations           Number of iterations (default: 5)."
@@ -47,7 +68,9 @@ function display_help() {
     echo "   -v, --version              Print version number and exit."
     echo "   -h, --help                 Show this message."
     echo " "
-    echo "Extended Usage: jorg --bin_fasta_file bin.186.fa --reads_file SRX3307784_clean.fastq.gz --kmer_length 33 --min_coverage 50 --iterations 5 --high_contig_num no --single_end_reads no"
+    echo "Extended Usage: jorg --bin_fasta_file bin.186.fa --reads_file interleaved_reads.fastq.gz --kmer_length 33 --min_coverage 50 --iterations 5 --high_contig_num no "
+    echo "or"
+    echo "jorg --bin_fasta_file bin.186.fa --forward reads_1.fastq.gz --reverse reads_2.fastq.gz --kmer_length 33 --min_coverage 50 --iterations 5 --high_contig_num no "
     echo " "
     echo "Please cite: Lui LM, Nielsen TN, Arkin AP. 2020, biorxiv (https://www.biorxiv.org/content/10.1101/2020.03.05.979740v2.full)."
     exit 1
@@ -56,24 +79,33 @@ function display_help() {
 # If jorg entered with no other input then will display help menu
 [ $# -eq 0 ] && { display_help ; exit 1; }
 
+################################################################################
+# Check for dependencies
+################################################################################
+
+# Check for MIRA installation
+command -v mira >/dev/null 2>&1 || { echo >&2 "Error: unable to locate MIRA. Please make sure MIRA is installed on your system. Exiting."; exit 1; }
+
+# Check for Seqtk installation
+command -v seqtk >/dev/null 2>&1 || { echo >&2 "Error: unable to locate Seqtk. Please make sure Seqtk is installed on your system. Exiting."; exit 1; }
+
+# Capture seqtk stout, but this doesn't work, it causes a hang
+#seqtk 2> /tmp/seqtk_version.tmp
+
+################################################################################
+# Variable Declarations
+################################################################################
+
 # Jorg variable declarations
 bin_fasta_file="NULL"
 reads_file="NULL"
+reads_forward="NULL"
+reads_reverse="NULL"
 kmer_length=33
 min_coverage=50 # originally 200, may need to fix. 50 required to prevent filtering all contigs after iteration #1
 iterations=5
 high_contig_num="no"
 single_end_reads="no"
-
-# Convert relevant abnormal entrees for high_contig_num variable
-if [ ! $(echo "$high_contig_num") == "n" ] || [ ! $(echo "$high_contig_num") == "N" ] || [ ! $(echo "$high_contig_num") == "No" ]; then
-    high_contig_num="no"
-fi
-
-# Convert relevant abnormal entrees for single_end_reads variable
-if [ ! $(echo "$single_end_reads") == "n" ] || [ ! $(echo "$single_end_reads") == "N" ] || [ ! $(echo "$single_end_reads") == "No" ]; then
-    single_end_reads="no"
-fi
 
 # Read input parameters and designate variables
 while [ "$1" != "" ]; do
@@ -84,6 +116,12 @@ while [ "$1" != "" ]; do
         -r | --reads_file )        shift
                                    reads_file=$1
                                    ;;
+        --forward )                shift 
+                                   reads_forward=$1 
+                                   ;;    
+        --reverse )                shift 
+                                   reads_reverse=$1 
+                                   ;; 
         -k | --kmer_length )       shift
                                    kmer_length=$1
                                    ;;
@@ -112,45 +150,70 @@ while [ "$1" != "" ]; do
     shift
 done
 
+################################################################################ 
+# Variable Checks
+################################################################################ 
+
+# Convert relevant abnormal entrees for high_contig_num variable
+if [ ! "$high_contig_num" == "n" ] || [ ! "$high_contig_num" == "N" ] || [ ! "$high_contig_num" == "No" ]; then
+    high_contig_num="no"
+fi
+
+# Convert relevant abnormal entrees for single_end_reads variable
+if [ ! "$single_end_reads" == "n" ] || [ ! "$single_end_reads" == "N" ] || [ ! "$single_end_reads" == "No" ]; then
+    single_end_reads="no"
+fi
+
 # Check for existence of input fasta file
-if [[ ! "$bin_fasta_file" = *[!\ ]* ]]; then
+if [ "$bin_fasta_file" = "NULL" ]; then
     echo "Input bin fasta file not defined (set using -b, --bin_fasta_file). Exiting."
     exit 1
 fi
 
 # Check for existence of input fastq reads file
-if [[ ! "$reads_file" = *[!\ ]* ]]; then
-    echo "Input reads fastq file not defined (set using -r, --reads_file). Exiting."
+if [ "$reads_file" = "NULL" ]
+then
+    if [ "$reads_forward" = "NULL" ] && [ "$reads_reverse" = "NULL" ] 
+    then
+        echo "Input reads fastq file not defined (set using -r, --reads_file or --foward and --reverse for paired end reads). Exiting."
+            exit 1
+    elif [ "$reads_forward" = "NULL" ]
+        then
+                echo "Are you missing the forward reads file? Input reads fastq file not defined (set using -r, --reads_file or --foward and --reverse for paired end reads). Exiting."
+                exit 1
+    elif [ "$reads_reverse" = "NULL" ]
+    then
+        echo "Are you missing the reverse reads file? Input reads fastq file not defined (set using -r, --reads_file or --foward and --reverse for paired end reads). Exiting."
+                exit 1 
+    fi
+fi
+
+#Check for manifest template file
+if [ ! -e "manifest_template.conf" ] 
+then 
+    echo "Missing manifest_template.conf file.  Copy it into current directory."
     exit 1
 fi
+
+################################################################################
+# Log File
+################################################################################
 
 # Name jorg logfile based on input bin and date/time
 jorg_logfile="Jorg_$(basename ${bin_fasta_file})_$(date +%c | sed 's/[: ]/-/g').log"
 
-# Check for MIRA installation
-command -v mira >/dev/null 2>&1 || { echo >&2 "Error: unable to locate MIRA. Please make sure MIRA is installed on your system. Exiting."; exit 1; }
-
-# Check for MIRABAIT installation
-command -v mirabait >/dev/null 2>&1 || { echo >&2 "Error: unable to locate MIRABAIT. Please make sure MIRABAIT is installed on your system. Exiting."; exit 1; }
-
-# Check for Seqtk installation
-command -v seqtk >/dev/null 2>&1 || { echo >&2 "Error: unable to locate Seqtk. Please make sure Seqtk is installed on your system. Exiting."; exit 1; }
-
-# Capture seqtk stout, but this doesn't work, it causes a hang
-#seqtk 2> /tmp/seqtk_version.tmp
-
 # Start logging and timer
 jorg_time_start=$(date +%s)
 echo " "
-echo "Writing log to file:"$jorg_logfile
-echo "Jorg run on " $(date) | tee -a "$jorg_logfile"
+echo "Writing log to file: $jorg_logfile"
+echo "Jorg run on $(date)" | tee -a "$jorg_logfile"
 echo "" | tee -a "$jorg_logfile"
 echo "User environment details:" | tee -a "$jorg_logfile"
-echo "MIRA path:" $(which mira) | tee -a "$jorg_logfile"
-echo "MIRA version:" $(mira --version | grep MIRA | sed 's/MIRA //' 2>&1) | tee -a "$jorg_logfile"
-echo "MIRABAIT path:" $(which mirabait) | tee -a "$jorg_logfile"
-echo "MIRABAIT version:" $(mirabait --version | grep MIRA | sed 's/MIRABAIT //' 2>&1) | tee -a "$jorg_logfile"
-echo "seqtk path:" $(which seqtk) | tee -a "$jorg_logfile"
+echo "MIRA path: $(which mira)" | tee -a "$jorg_logfile"
+echo "MIRA version: $(mira --version | grep MIRA | sed 's/MIRA //' 2>&1)" | tee -a "$jorg_logfile"
+echo "MIRABAIT path: $(which mirabait)" | tee -a "$jorg_logfile"
+echo "MIRABAIT version: $(mirabait --version | grep MIRA | sed 's/MIRABAIT //' 2>&1)" | tee -a "$jorg_logfile"
+echo "seqtk path: $(which seqtk)" | tee -a "$jorg_logfile"
 # echo "seqtk version:" $(grep Version /tmp/seqtk_version.tmp | sed 's/Version: //' 2>&1) | tee -a "$jorg_logfile"
 
 # Check for existence of input fasta file
@@ -161,14 +224,18 @@ if [ ! -f "$bin_fasta_file" ]; then
 fi
 
 # Check for existence of input reads fastq file
-if [ ! -f "$reads_file" ]; then
-    echo "contig file not found: $reads_file" | tee -a "$jorg_logfile"
-    echo "Exiting." | tee -a "$jorg_logfile"
-    exit 1
+if [ ! -f "$reads_file" ] 
+then
+    if  [ ! -f "$reads_forward" ] || [ ! -f "$reads_reverse" ]
+    then
+        echo "File not found: reads file(s)" | tee -a "$jorg_logfile"
+        echo "Exiting." | tee -a "$jorg_logfile"
+        exit 1
+    fi
 fi
 
 # Check for number of contigs in input fasta file
-if [[ $(grep -c "^>" "$bin_fasta_file") -gt 2500 ]] && [[ ! $(echo "$high_contig_num") == "no" ]]; then
+if [[ $(grep -c "^>" "$bin_fasta_file") -gt 2500 ]] && [[ ! "$high_contig_num" == "no" ]]; then
     echo "Number of contigs found in bin_fasta_file greater than 2500." | tee -a "$jorg_logfile"
     echo "Are you certain this is a single genome? If yes, rerun with --high_contig_num 'no' flag" | tee -a "$jorg_logfile"
     echo "Exiting." | tee -a "$jorg_logfile"
@@ -188,7 +255,16 @@ fi
 # fqfilepath="SRX3307784_clean.fastq.gz"
 fafilepath=${bin_fasta_file}
 echo "fafilepath is $fafilepath" | tee -a "$jorg_logfile"
-fqfilepath=${reads_file}
+
+#This is only a temporary fix 
+if [ "$reads_file" == "NULL" ]; then  
+        fqfilepath=${reads_forward}   #probably should be finessed a little more 
+        echo "fqfilepath is $fqfilepath" | tee -a "$jorg_logfile" 
+    else 
+        fqfilepath=${reads_file}  
+        echo "fqfilepath is $fqfilepath" | tee -a "$jorg_logfile"
+fi 
+
 echo "fqfilepath is $fqfilepath" | tee -a "$jorg_logfile"
 fafilename=$(basename "$fafilepath")
 echo "fafilename is $fafilename" | tee -a "$jorg_logfile"
@@ -197,9 +273,8 @@ echo "fqfilename is $fqfilename" | tee -a "$jorg_logfile"
 binID=$(echo "${fafilename%.*}" )
 echo "binID is $binID" | tee -a "$jorg_logfile"
 
-# not working
-fqbinID=$(echo $fqbinID | sed 's/\.fastq.gz$//' | sed 's/\.fastq$//' | sed 's/\.fq.gz$//' ) # may need better solution to remove .fq.gz and .fastq.gz
-echo "fqbinID is $fqbinID" | tee -a "$jorg_logfile"
+# not working, could be now?
+fqbinID=$(echo $fqfilename | sed 's/\.fastq.gz//' | sed 's/\.fq.gz//' | sed 's/\.fastq//' | sed 's/\.fq//' ) # may need better solution to remove .fq.gz and .fastq.gz
 
 # Check for fasta and fastq files having the same prefix, causes errors during mirabait step below
 # not working
@@ -208,12 +283,15 @@ if [[ $binID = $fqbinID ]]; then
     exit 1
 fi
 
+################################################################################
+# Run Jorg
+################################################################################
 
 # Jorg running and logging
 echo " " | tee -a "$jorg_logfile"
 echo "***Start running Jorg***" | tee -a "$jorg_logfile"
 
-# Copy input fasta file to avoid overwriting
+# Copy original file to avoid rewriting over it 
 outfile="$binID".out.fasta
 echo "outfile is $outfile" | tee -a "$jorg_logfile"
 cp "$bin_fasta_file" "$outfile"
@@ -236,17 +314,34 @@ echo "End: generating new directory named 'Iterations'" | tee -a "$jorg_logfile"
 
 for (( i = 1; i <= "$iterations"; i++ )); do
     echo " " | tee -a "$jorg_logfile"
-    echo "*Start: Jorg iteration # "${i}"*" | tee -a "$jorg_logfile"
+    echo "*Start: Jorg iteration # ${i}*" | tee -a "$jorg_logfile"
     jorg_iteration_time_start=$(date +%s)
     echo "Iteration "${i} >> iterations.txt
 
     # Recruit reads with mirabait
     mirabait_time_start=$(date +%s)
     echo "Start: recruiting reads with mirabait" | tee -a "$jorg_logfile"
-    # mirabait -k 33 -b "$outfile" -P SRX3307784_clean.fastq -o "$binID".fastq &> mirabait.log
-    mirabait -k "$kmer_length" -b "$outfile" -P "$reads_file" -o "$binID".fastq &> mirabait_iteration_${i}.log
+
+    # Example of using mirabait: mirabait -k 33 -b "$outfile" -P SRX3307784_clean.fastq -o "$binID".fastq &> mirabait.log
+    if [ "$reads_file" == "NULL" ]; then  
+        mirabait -k "$kmer_length" -b "$outfile" -p "$reads_forward" "$reads_reverse" -o "$binID".fastq &> mirabait_iteration_${i}.log
+    else
+        mirabait -k "$kmer_length" -b "$outfile" -P "$reads_file" -o "$binID".fastq &> mirabait_iteration_${i}.log
+    fi
+
     mirabait_time_elapsed=$(( $(date +%s) - $mirabait_time_start ))
     echo "End: recruiting reads with mirabait" - $mirabait_time_elapsed" seconds elapsed." | tee -a "$jorg_logfile"
+
+    #Check if mirabait finished properly
+    if [ $(tail mirabait_iteration_${i}.log | grep -c "Thank you for noticing that this is *NOT* a crash") == 1 ]; then 
+        echo "mirabait had a controlled stop. Check mirabait_iteration_${i}.log for errors." | tee -a "$jorg_logfile" 
+        exit 1
+    fi 
+    if [ $(tail  mirabait_iteration_${i}.log | grep -c "Baiting process finished.") == 0 ]; then 
+        echo "mirabait may have had errors. Check mirabait.log." | tee -a "$jorg_logfile" 
+    else
+        echo "Recruiting reads with mirabait appears to have finished successfully." | tee -a "$jorg_logfile"
+    fi
 
     # Check if the reads file is empty.  Seqtk will hang if the input file is empty.
     echo "Start: check if fastq file empty." | tee -a "$jorg_logfile"
@@ -273,12 +368,28 @@ for (( i = 1; i <= "$iterations"; i++ )); do
     mira_assembly_time_elapsed=$(( $(date +%s) - $mira_assembly_time_start ))
     echo "End: run MIRA assembly" - $mira_assembly_time_elapsed" seconds elapsed." | tee -a "$jorg_logfile"
 
+    #### Check mira log file for status
+    # MIRA finished
+    if [ $(tail mira_iteration_${i}.log | grep -c "We're done here, thank you for using MIRA.") == 1 ]; then
+        echo "MIRA assembly finished. " | tee -a "$jorg_logfile"
+    fi
+    # MIRA finished but could not get long contigs
+    if [ $(tail mira_iteration_${i}.log | grep -c "Large contigs could not be extracted, sorry.") == 1 ]; then 
+        echo "Large contigs could not be extracted from the MIRA assembly. Although the MIRA assembly finished no more iterations are possible. Check mira_iteration_${i}.log" | tee -a "$jorg_logfile" 
+        exit 1
+    fi 
+    # MIRA had an error
+    if [ $(tail mira_iteration_${i}.log | grep -c "Thank you for noticing that this is *NOT* a crash") == 1 ]; then
+        echo "MIRA had a controlled stop. Check mira_iteration_${i}.log for errors." | tee -a "$jorg_logfile"
+    fi
+
     # Get MIRA assembly file
     echo "Start: get MIRA assembly file" | tee -a "$jorg_logfile"
     cp "$binID"_assembly/"$binID"_d_results/"$binID"_out.unpadded.fasta "$binID"_MIRA.fasta
     echo "End: get MIRA assembly file" | tee -a "$jorg_logfile"
 
     # Get contigs that are greater than 1000bp and have coverage greater than the indicated minimum
+    # Should add an option for controlling the minimum contig size
     echo "Start: get contigs >1000bp and with sufficient coverage" | tee -a "$jorg_logfile"
     awk -v coverage_min="$min_coverage" '{if($2 >= 1000 && $6 >= coverage_min || NR == 1) print}' "$binID"_assembly/"$binID"_d_info/"$binID"_info_contigstats.txt > list.txt
     echo "End: get contigs >1000bp and with sufficient coverage" | tee -a "$jorg_logfile"
@@ -319,6 +430,7 @@ for (( i = 1; i <= "$iterations"; i++ )); do
     echo "End: output assembly based on stats collected in list.txt" - $subseq_time_elapsed" seconds elapsed." | tee -a "$jorg_logfile"
 
     # Output contig stats on assembly
+    # contig_name length %GC cumulative_length
     echo "Start: output contig stats on assembly" | tee -a "$jorg_logfile"
     contig_stats_time_start=$(date +%s)
     seqtk comp ${binID}.out.fasta | sort -k 2,2nr | awk '{printf "%-40s %8d %7.2f %8d\n", $1, $2, 100.0 * ($4 + $5)/($3 + $4 + $5 + $6), sum += $2}' >> iterations.txt
