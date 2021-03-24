@@ -7,7 +7,7 @@
 #
 # Contact Lauren Lui with questions (lmlui@lbl.gov)
 #
-# Jorg is a script that uses the assembler MIRA to help circularize 
+# Jorg is a script that uses the assembler MIRA to help circularize
 #   metagenome-assembled genomes, but can also be used to improve bins
 #
 ################################################################################
@@ -116,12 +116,12 @@ while [ "$1" != "" ]; do
         -r | --reads_file )        shift
                                    reads_file=$1
                                    ;;
-        --forward )                shift 
-                                   reads_forward=$1 
-                                   ;;    
-        --reverse )                shift 
-                                   reads_reverse=$1 
-                                   ;; 
+        --forward )                shift
+                                   reads_forward=$1
+                                   ;;
+        --reverse )                shift
+                                   reads_reverse=$1
+                                   ;;
         -k | --kmer_length )       shift
                                    kmer_length=$1
                                    ;;
@@ -150,9 +150,9 @@ while [ "$1" != "" ]; do
     shift
 done
 
-################################################################################ 
+################################################################################
 # Variable Checks
-################################################################################ 
+################################################################################
 
 # Convert relevant abnormal entrees for high_contig_num variable
 if [ ! "$high_contig_num" == "n" ] || [ ! "$high_contig_num" == "N" ] || [ ! "$high_contig_num" == "No" ]; then
@@ -180,12 +180,12 @@ if [ "$reads_file" = "NULL" ]; then
         exit 1
     elif [ "$reads_reverse" = "NULL" ]; then
         echo "Are you missing the reverse reads file? Input reads fastq file not defined (set using -r, --reads_file or --foward and --reverse for paired end reads). Exiting."
-        exit 1 
+        exit 1
     fi
 fi
 
 #Check for manifest template file
-if [ ! -e "manifest_template.conf" ]; then 
+if [ ! -e "manifest_template.conf" ]; then
     echo "Missing manifest_template.conf file.  Copy it into current directory."
     exit 1
 fi
@@ -249,14 +249,14 @@ fi
 fafilepath=${bin_fasta_file}
 echo "fafilepath is $fafilepath" | tee -a "$jorg_logfile"
 
-#This is only a temporary fix 
-if [ "$reads_file" == "NULL" ]; then  
-        fqfilepath=${reads_forward}   #probably should be finessed a little more 
-        echo "fqfilepath is $fqfilepath" | tee -a "$jorg_logfile" 
-    else 
-        fqfilepath=${reads_file}  
+#This is only a temporary fix
+if [ "$reads_file" == "NULL" ]; then
+        fqfilepath=${reads_forward}   #probably should be finessed a little more
         echo "fqfilepath is $fqfilepath" | tee -a "$jorg_logfile"
-fi 
+    else
+        fqfilepath=${reads_file}
+        echo "fqfilepath is $fqfilepath" | tee -a "$jorg_logfile"
+fi
 
 echo "fqfilepath is $fqfilepath" | tee -a "$jorg_logfile"
 fafilename=$(basename "$fafilepath")
@@ -284,7 +284,7 @@ fi
 echo " " | tee -a "$jorg_logfile"
 echo "***Start running Jorg***" | tee -a "$jorg_logfile"
 
-# Copy original file to avoid rewriting over it 
+# Copy original file to avoid rewriting over it
 outfile="$binID".out.fasta
 echo "outfile is $outfile" | tee -a "$jorg_logfile"
 cp "$bin_fasta_file" "$outfile"
@@ -316,7 +316,7 @@ for (( i = 1; i <= "$iterations"; i++ )); do
     echo "Start: recruiting reads with mirabait" | tee -a "$jorg_logfile"
 
     # Example of using mirabait: mirabait -k 33 -b "$outfile" -P SRX3307784_clean.fastq -o "$binID".fastq &> mirabait.log
-    if [ "$reads_file" == "NULL" ]; then  
+    if [ "$reads_file" == "NULL" ]; then
         mirabait -k "$kmer_length" -b "$outfile" -p "$reads_forward" "$reads_reverse" -o "$binID".fastq &> mirabait_iteration_${i}.log
     else
         mirabait -k "$kmer_length" -b "$outfile" -P "$reads_file" -o "$binID".fastq &> mirabait_iteration_${i}.log
@@ -326,15 +326,15 @@ for (( i = 1; i <= "$iterations"; i++ )); do
     echo "End: recruiting reads with mirabait" - $mirabait_time_elapsed" seconds elapsed." | tee -a "$jorg_logfile"
 
     #Check if mirabait finished properly
-    if [ $(tail mirabait_iteration_${i}.log | grep -c "Thank you for noticing that this is *NOT* a crash") == 1 ]; then 
-        echo "mirabait had a controlled stop. Check mirabait_iteration_${i}.log for errors." | tee -a "$jorg_logfile" 
-        exit 1
-    fi 
-    if [ $(tail  mirabait_iteration_${i}.log | grep -c "Baiting process finished.") == 0 ]; then 
-        echo "mirabait may have had errors. Check mirabait.log." | tee -a "$jorg_logfile" 
-    else
-        echo "Recruiting reads with mirabait appears to have finished successfully." | tee -a "$jorg_logfile"
-    fi
+#     if [ $(tail mirabait_iteration_${i}.log | grep -c "Thank you for noticing that this is *NOT* a crash") == 1 ]; then
+#         echo "mirabait had a controlled stop. Check mirabait_iteration_${i}.log for errors." | tee -a "$jorg_logfile"
+#         exit 1
+#     fi
+#     if [ $(tail  mirabait_iteration_${i}.log | grep -c "Baiting process finished.") == 0 ]; then
+#         echo "mirabait may have had errors. Check mirabait.log." | tee -a "$jorg_logfile"
+#     else
+#         echo "Recruiting reads with mirabait appears to have finished successfully." | tee -a "$jorg_logfile"
+#     fi
 
     # Check if the reads file is empty.  Seqtk will hang if the input file is empty.
     echo "Start: check if fastq file empty." | tee -a "$jorg_logfile"
@@ -363,18 +363,18 @@ for (( i = 1; i <= "$iterations"; i++ )); do
 
     #### Check mira log file for status
     # MIRA finished
-    if [ $(tail mira_iteration_${i}.log | grep -c "We're done here, thank you for using MIRA.") == 1 ]; then
-        echo "MIRA assembly finished. " | tee -a "$jorg_logfile"
-    fi
-    # MIRA finished but could not get long contigs
-    if [ $(tail mira_iteration_${i}.log | grep -c "Large contigs could not be extracted, sorry.") == 1 ]; then 
-        echo "Large contigs could not be extracted from the MIRA assembly. Although the MIRA assembly finished no more iterations are possible. Check mira_iteration_${i}.log" | tee -a "$jorg_logfile" 
-        exit 1
-    fi 
-    # MIRA had an error
-    if [ $(tail mira_iteration_${i}.log | grep -c "Thank you for noticing that this is *NOT* a crash") == 1 ]; then
-        echo "MIRA had a controlled stop. Check mira_iteration_${i}.log for errors." | tee -a "$jorg_logfile"
-    fi
+#     if [ $(tail mira_iteration_${i}.log | grep -c "We're done here, thank you for using MIRA.") == 1 ]; then
+#         echo "MIRA assembly finished. " | tee -a "$jorg_logfile"
+#     fi
+#     # MIRA finished but could not get long contigs
+#     if [ $(tail mira_iteration_${i}.log | grep -c "Large contigs could not be extracted, sorry.") == 1 ]; then
+#         echo "Large contigs could not be extracted from the MIRA assembly. Although the MIRA assembly finished no more iterations are possible. Check mira_iteration_${i}.log" | tee -a "$jorg_logfile"
+#         exit 1
+#     fi
+#     # MIRA had an error
+#     if [ $(tail mira_iteration_${i}.log | grep -c "Thank you for noticing that this is *NOT* a crash") == 1 ]; then
+#         echo "MIRA had a controlled stop. Check mira_iteration_${i}.log for errors." | tee -a "$jorg_logfile"
+#     fi
 
     # Get MIRA assembly file
     echo "Start: get MIRA assembly file" | tee -a "$jorg_logfile"
