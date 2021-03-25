@@ -63,6 +63,7 @@ function display_help() {
     echo "   -k, --kmer_length          Kmer value for baiting (default: 33)."
     echo "   -c, --min_coverage         Minimum coverage value (default: 50)."
     echo "   -i, --iterations           Number of iterations (default: 5)."
+    echo "   -t, --runtime_cap          Max number of days for MIRA iteration steps (default: none)."
     echo "   --high_contig_num          Relevant only if input assembly has >2500 contigs: are you certain that this is a single genome worth running with Jorg? (default: no)."
     echo "   --single_end_reads         Are the input reads a single-end library? (default: no)."
     echo "   -v, --version              Print version number and exit."
@@ -104,6 +105,7 @@ reads_reverse="NULL"
 kmer_length=33
 min_coverage=50 # originally 200, may need to fix. 50 required to prevent filtering all contigs after iteration #1
 iterations=5
+runtime_cap="NULL"
 high_contig_num="no"
 single_end_reads="no"
 
@@ -130,6 +132,9 @@ while [ "$1" != "" ]; do
                                    ;;
         -i | --iterations )        shift
                                    iterations=$1
+                                   ;;
+        -t | --runtime_cap )       shift
+                                   runtime_cap=$1
                                    ;;
         --high_contig_num )        shift
                                    high_contig_num=$1
@@ -189,6 +194,9 @@ if [ ! -e "manifest_template.conf" ]; then
     echo "Missing manifest_template.conf file.  Copy it into current directory."
     exit 1
 fi
+
+#Convert run limit length from days to second
+runtime_cap_seconds=$(( 86400*$runtime_cap))
 
 ################################################################################
 # Log File
@@ -427,6 +435,10 @@ for (( i = 1; i <= "$iterations"; i++ )); do
     echo "Start: output contig stats on assembly" | tee -a "$jorg_logfile"
     contig_stats_time_start=$(date +%s)
     seqtk comp ${binID}.out.fasta | sort -k 2,2nr | awk '{printf "%-40s %8d %7.2f %8d\n", $1, $2, 100.0 * ($4 + $5)/($3 + $4 + $5 + $6), sum += $2}' >> iterations.txt
+#     awk '/^>/ {printf("\n%s\n",$0);next; } { printf("%s",$0);}  END {printf("\n");}' ${binID}.out.fasta | sed '/^$/d' > ${binID}.out.fasta.flat
+#     grep "^>" ${binID}.out.fasta.flat > ${binID}.out.fasta.flat.ids
+#     grep -v "^>" ${binID}.out.fasta.flat > ${binID}.out.fasta.flat.sequences
+#
 
     contig_stats_time_elapsed=$(( $(date +%s) - $contig_stats_time_start ))
     echo "End: output contig stats on assembly" - $contig_stats_time_elapsed" seconds elapsed." | tee -a "$jorg_logfile"
@@ -438,6 +450,16 @@ for (( i = 1; i <= "$iterations"; i++ )); do
 
     jorg_iteration_time_elapsed=$(( $(date +%s) - $jorg_iteration_time_start ))
     echo "End: Jorg iteration # "${i} - $jorg_iteration_time_elapsed" seconds elapsed." | tee -a "$jorg_logfile"
+
+    echo "Start: check for max run length"
+    if [ ! "$runtime_cap" = "NULL" ]; then 
+        if [[ `expr $(date +%s) - $jorg_time_start` -gt "$runtime_cap_seconds" ]]; then
+            echo "Max run length limit exceeded. Ending with Jorg iteration # "${i} | tee -a "$jorg_logfile"
+            iterations=${i}
+        else 
+            echo "Have not yet reached run length limit. Continuing to next Jorg iteration." | tee -a "$jorg_logfile"
+        fi
+    fi
 done
 
 jorg_time_elapsed=$(( $(date +%s) - $jorg_time_start ))
