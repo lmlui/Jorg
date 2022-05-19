@@ -16,7 +16,7 @@
 set -e
 
 # Software version, starting at 1.0.0
-jorg_version=1.0.0
+jorg_version=1.0.1
 
 ################################################################################
 # Menu banner
@@ -35,7 +35,7 @@ function ascii_text_banner() {
 ################################################################################
 function display_version() {
     echo "$jorg_version"
-    exit 1
+    exit 0
 }
 
 ################################################################################
@@ -73,7 +73,7 @@ function display_help() {
     echo "jorg --bin_fasta_file bin.1.fa --forward reads_1.fastq.gz --reverse reads_2.fastq.gz --kmer_length 33 --min_coverage 50 --iterations 5 --high_contig_num no "
     echo " "
     echo "Please cite: Lui LM, Nielsen TN, Arkin AP. 2020, biorxiv (https://www.biorxiv.org/content/10.1101/2020.03.05.979740v2.full)."
-    exit 1
+    exit 0
 }
 
 # If jorg entered with no other input then will display help menu
