@@ -6,20 +6,22 @@ By Lauren Lui, Torben Nielsen, and Adam Arkin
 <img src="https://genomics.lbl.gov/~lmlui/Images/StrikingImage-Jorg5b.png" width="50%" >
 </p>
 
-This is a method to help circularize genomes from shotgun metagenomics data. We named this project Jorg after J&ouml;rgmungandr, <em>aka</em> the Midgard Serpent, from Norse mythology. It is an example of an ouroboros, a snake biting its own tail.
+This is a method to help circularize genomes from shotgun metagenomics data. We named this project Jorg after J&ouml;rgmungandr, <em>aka</em> the Midgard Serpent, from Norse mythology. It is an example of an ouroboros, a snake biting its own tail. Note that this is primarily for use with Illumina data.  Please see the manuscript ["A method for achieving complete microbial genomes and better quality bins from metagenomics data" on bioRxiv](https://doi.org/10.1371/journal.pcbi.1008972) and cite it if you use this method.
+
+If you are interested in a method for long read metagenomes, see our other manuscript ["Decomposing a San Francisco estuary microbiome using long-read metagenomics reveals species- and strain-level dominance from picoeukaryotes to viruses"](https://doi.org/10.1128/msystems.00242-24) which outlines a similar method but with tools that are suitable for long read sequence data.
 
 
 Contact Lauren with questions (lmlui at lbl dot gov).
 
 
-Please see the manuscript ["A method for achieving complete microbial genomes and better quality bins from metagenomics data" on bioRxiv](https://www.biorxiv.org/content/10.1101/2020.03.05.979740v2.full) and cite it if you use this method.
+
 
 We thank Sean Jungbluth for helping extend the code for use in the DOE Systems Biology KnowledgeBase.
 
 <h1>Overview of Method </h1>
 
 <p align="center">
-<img src="https://www.biorxiv.org/content/biorxiv/early/2020/03/07/2020.03.05.979740/F1.large.jpg" width="50%">
+<img src="https://journals.plos.org/ploscompbiol/article/figure/image?size=inline&id=10.1371/journal.pcbi.1008972.g001" width="60%">
 </p>
 
 <font size="6">
@@ -100,7 +102,7 @@ We use [BBtools](https://jgi.doe.gov/data-and-tools/bbtools/) for cleaning the r
 <h2> Pick a bin to circularize</h2>
 Criteria for picking a bin:
 <ol>
-  <li> <b> A bin with <10 contigs. </b> We recommend picking a bin that has fewer than 10 contigs to increase success, but you can pick any bin and likely it will be improved using this method. We made exceptions for bins that looked promising, such as a bin with many contigs, but with one or two large contigs that comprise most of the bin’s sequence length  </li>
+  <li> <b> A bin with <10 contigs. </b> We recommend picking a bin that has fewer than 10 contigs to increase success, but you can pick any bin and likely it will be improved using this method. We made exceptions for bins that looked promising, such as a bin with many contigs, but with one or two large contigs that comprise most of the bin’s sequence length. </li>
   <li> <b> The bin has an average coverage >30X. </b> Higher coverage is better for success.  If you didn't get the coverage from your binning output, use bwa to map reads to the longest contig to help determine the coverage. Typically this is a good coverage estimate.
  </ol>   
 <h2> Use the Jorg script to iterate mapping reads to the bin with mirabait and reassemble with MIRA. Note: typically it takes at least several hours for each iteration of Jorg to run, so jobs using a high number of iterations may take multiple days.</h2>
