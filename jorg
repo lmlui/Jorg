@@ -7,7 +7,7 @@
 #
 # Contact Lauren Lui with questions (lmlui@lbl.gov)
 #
-# Jorg is a script that uses the assembler MIRA to help circularize
+# Jorg is a script that uses the assembler MIRA to help circularize (short-read)
 #   metagenome-assembled genomes, but can also be used to improve bins
 #
 ################################################################################
@@ -16,7 +16,7 @@
 set -e
 
 # Software version, starting at 1.0.0
-jorg_version=1.0.1
+jorg_version=1.0.2
 
 ################################################################################
 # Menu banner
