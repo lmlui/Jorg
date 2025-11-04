@@ -7,7 +7,7 @@
 #
 # Contact Lauren Lui with questions (lmlui@lbl.gov)
 #
-# Jorg is a script that uses the assembler MIRA to help circularize 
+# Jorg is a script that uses the assembler MIRA to help circularize
 #   metagenome-assembled genomes, but can also be used to improve bins
 #
 ################################################################################
@@ -16,7 +16,7 @@
 set -e
 
 # Software version, starting at 1.0.0
-jorg_version=1.0.0
+jorg_version=1.0.1
 
 ################################################################################
 # Menu banner
@@ -35,7 +35,7 @@ function ascii_text_banner() {
 ################################################################################
 function display_version() {
     echo "$jorg_version"
-    exit 1
+    exit 0
 }
 
 ################################################################################
@@ -64,6 +64,7 @@ function display_help() {
     echo "   -c, --min_coverage         Minimum coverage value (default: 50)."
     echo "   -i, --iterations           Number of iterations (default: 5)."
     echo "   --high_contig_num          Relevant only if input assembly has >2500 contigs: are you certain that this is a single genome worth running with Jorg? (default: no)."
+    echo "   -t, --threads              Number of threads for mirabait and mira operations - selecting more than 1 thread may lead to running under 100% cpu utilisation"
     echo "   -v, --version              Print version number and exit."
     echo "   -h, --help                 Show this message."
     echo " "
@@ -72,7 +73,7 @@ function display_help() {
     echo "jorg --bin_fasta_file bin.1.fa --forward reads_1.fastq.gz --reverse reads_2.fastq.gz --kmer_length 33 --min_coverage 50 --iterations 5 --high_contig_num no "
     echo " "
     echo "Please cite: Lui LM, Nielsen TN, Arkin AP. 2020, biorxiv (https://www.biorxiv.org/content/10.1101/2020.03.05.979740v2.full)."
-    exit 1
+    exit 0
 }
 
 # If jorg entered with no other input then will display help menu
@@ -103,6 +104,7 @@ kmer_length=33
 min_coverage=50 # originally 200, may need to fix. 50 required to prevent filtering all contigs after iteration #1
 iterations=5
 high_contig_num="no"
+threads="1"
 
 # Read input parameters and designate variables
 while [ "$1" != "" ]; do
@@ -113,12 +115,12 @@ while [ "$1" != "" ]; do
         -r | --reads_file )        shift
                                    reads_file=$1
                                    ;;
-        --forward  )               shift 
-                                   reads_forward=$1 
-                                   ;;    
-        --reverse   )              shift 
-                                   reads_reverse=$1 
-                                   ;; 
+        --forward  )               shift
+                                   reads_forward=$1
+                                   ;;
+        --reverse   )              shift
+                                   reads_reverse=$1
+                                   ;;
         -k | --kmer_length )       shift
                                    kmer_length=$1
                                    ;;
@@ -130,6 +132,9 @@ while [ "$1" != "" ]; do
                                    ;;
         --high_contig_num )        shift
                                    high_contig_num=$1
+                                   ;;
+        -t | --threads )           shift
+                                   threads=$1
                                    ;;
         -v | --version )           shift
                                    display_version
@@ -144,9 +149,9 @@ while [ "$1" != "" ]; do
     shift
 done
 
-################################################################################ 
+################################################################################
 # Variable Checks
-################################################################################ 
+################################################################################
 
 # Convert relevant abnormal entrees for high_contig_num variable
 if [ ! "$high_contig_num" == "n" ] || [ ! "$high_contig_num" == "N" ] || [ ! "$high_contig_num" == "No" ]; then
@@ -162,7 +167,7 @@ fi
 # Check for existence of input fastq reads file
 if [ "$reads_file" = "NULL" ]
 then
-	if [ "$reads_forward" = "NULL" ] && [ "$reads_reverse" = "NULL" ] 
+	if [ "$reads_forward" = "NULL" ] && [ "$reads_reverse" = "NULL" ]
 	then
 		echo "Input reads fastq file not defined (set using -r, --reads_file or --foward and --reverse for paired end reads). Exiting."
     		exit 1
@@ -173,13 +178,13 @@ then
 	elif [ "$reads_reverse" = "NULL" ]
 	then
 		echo "Are you missing the reverse reads file? Input reads fastq file not defined (set using -r, --reads_file or --foward and --reverse for paired end reads). Exiting."
-                exit 1 
+                exit 1
 	fi
 fi
 
 #Check for manifest template file
-if [ ! -e "manifest_template.conf" ] 
-then 
+if [ ! -e "manifest_template.conf" ]
+then
 	echo "Missing manifest_template.conf file.  Copy it into current directory."
 	exit 1
 fi
@@ -213,7 +218,7 @@ if [ ! -f "$bin_fasta_file" ]; then
 fi
 
 # Check for existence of input reads fastq file
-if [ ! -f "$reads_file" ] 
+if [ ! -f "$reads_file" ]
 then
     if  [ ! -f "$reads_forward" ] || [ ! -f "$reads_reverse" ]
     then
@@ -236,13 +241,13 @@ fi
 # fafilepath="bin.186.fa"
 # fqfilepath="SRX3307784_clean.fastq.gz"
 fafilepath=${bin_fasta_file}
-#This is only a temporary fix 
-if [ "$reads_file" == "NULL" ] 
-then  
-        fqfilepath=${reads_forward}   #probably should be finessed a little more  
-else 
-        fqfilepath=${reads_file}  
-fi 
+#This is only a temporary fix
+if [ "$reads_file" == "NULL" ]
+then
+        fqfilepath=${reads_forward}   #probably should be finessed a little more
+else
+        fqfilepath=${reads_file}
+fi
 fafilename=$(basename "$fafilepath")
 fqfilename=$(basename "$fqfilepath")
 binID=$(echo "${fafilename%.*}" )
@@ -262,8 +267,8 @@ fi
 echo " " | tee -a "$jorg_logfile"
 echo "***Start running Jorg***" | tee -a "$jorg_logfile"
 
-# Copy original file to avoid rewriting over it 
-outfile="$binID".out.fasta 
+# Copy original file to avoid rewriting over it
+outfile="$binID".out.fasta
 cp "$bin_fasta_file" "$outfile"
 
 # Make manifest file for MIRA
@@ -290,31 +295,30 @@ for (( i = 1; i <= "$iterations"; i++ )); do
     # Recruit reads with mirabait
     mirabait_time_start=$(date +%s)
     echo "Start: recruiting reads with mirabait" | tee -a "$jorg_logfile"
-    
+
     # Example of using mirabait: mirabait -k 33 -b "$outfile" -P SRX3307784_clean.fastq -o "$binID".fastq &> mirabait.log
-    
-    if [ "$reads_file" == "NULL" ] 
-    then  
-            mirabait -k "$kmer_length" -b "$outfile" -p "$reads_forward" "$reads_reverse" -o "$binID".fastq &> mirabait_iteration_${i}.log
+
+    if [ "$reads_file" == "NULL" ]
+    then
+            mirabait -t "$threads" -k "$kmer_length" -b "$outfile" -p "$reads_forward" "$reads_reverse" -o "$binID".fastq &> mirabait_iteration_${i}.log
     else
-            mirabait -k "$kmer_length" -b "$outfile" -P "$reads_file" -o "$binID".fastq &> mirabait_iteration_${i}.log
+            mirabait -t "$threads" -k "$kmer_length" -b "$outfile" -P "$reads_file" -o "$binID".fastq &> mirabait_iteration_${i}.log
     fi
-  
+
     mirabait_time_elapsed=$(( $(date +%s) - $mirabait_time_start ))
     echo "End: recruiting reads with mirabait" - $mirabait_time_elapsed" seconds elapsed." | tee -a "$jorg_logfile"
 
     #Check if mirabait finished properly
-    if [ $(tail mirabait_iteration_${i}.log | grep -c "Thank you for noticing that this is *NOT* a crash") == 1 ] 
-    then 
-            echo "mirabait had a controlled stop. Check mirabait_iteration_${i}.log for errors." | tee -a "$jorg_logfile" 
+    if [ $(tail mirabait_iteration_${i}.log | grep -c "Thank you for noticing that this is *NOT* a crash") == 1 ]
+    then
+            echo "mirabait had a controlled stop. Check mirabait_iteration_${i}.log for errors." | tee -a "$jorg_logfile"
     	    exit 1
-    fi 
-    if [ $(tail  mirabait_iteration_${i}.log | grep -c "Baiting process finished.") == 0 ]; then 
-	    echo "mirabait may have had errors. Check mirabait.log." | tee -a "$jorg_logfile" 
+    fi
+    if [ $(tail  mirabait_iteration_${i}.log | grep -c "Baiting process finished.") == 0 ]; then
+	    echo "mirabait may have had errors. Check mirabait.log." | tee -a "$jorg_logfile"
     else
 	    echo "Recruiting reads with mirabait appears to have finished successfully." | tee -a "$jorg_logfile"
     fi
-	
 
     # Check if the reads file is empty.  Seqtk will hang if the input file is empty.
     echo "Start: check if fastq file empty." | tee -a "$jorg_logfile"
@@ -337,7 +341,7 @@ for (( i = 1; i <= "$iterations"; i++ )); do
     # Run MIRA assembly
     mira_assembly_time_start=$(date +%s)
     echo "Start: run MIRA assembly" | tee -a "$jorg_logfile"
-    mira manifest.conf &> mira_iteration_${i}.log
+    mira -t "$threads" manifest.conf &> mira_iteration_${i}.log
     mira_assembly_time_elapsed=$(( $(date +%s) - $mira_assembly_time_start ))
     echo "End: run MIRA assembly" - $mira_assembly_time_elapsed" seconds elapsed." | tee -a "$jorg_logfile"
 
@@ -348,11 +352,11 @@ for (( i = 1; i <= "$iterations"; i++ )); do
             echo "MIRA assembly finished. " | tee -a "$jorg_logfile"
     fi
     # MIRA finished but could not get long contigs
-    if [ $(tail mira_iteration_${i}.log | grep -c "Large contigs could not be extracted, sorry.") == 1 ] 
-    then 
-            echo "Large contigs could not be extracted from the MIRA assembly. Although the MIRA assembly finished no more iterations are possible. Check mira_iteration_${i}.log" | tee -a "$jorg_logfile" 
+    if [ $(tail mira_iteration_${i}.log | grep -c "Large contigs could not be extracted, sorry.") == 1 ]
+    then
+            echo "Large contigs could not be extracted from the MIRA assembly. Although the MIRA assembly finished no more iterations are possible. Check mira_iteration_${i}.log" | tee -a "$jorg_logfile"
     	    exit 1
-    fi 
+    fi
     # MIRA had an error
     if [ $(tail mira_iteration_${i}.log | grep -c "Thank you for noticing that this is *NOT* a crash") == 1 ]
     then
@@ -365,7 +369,7 @@ for (( i = 1; i <= "$iterations"; i++ )); do
     echo "End: get MIRA assembly file" | tee -a "$jorg_logfile"
 
     # Get contigs that are greater than 1000bp and have coverage greater than the indicated minimum
-    # Should add an option for controlling the minimum contig size 
+    # Should add an option for controlling the minimum contig size
     echo "Start: get contigs >1000bp and with sufficient coverage" | tee -a "$jorg_logfile"
     awk -v coverage_min="$min_coverage" '{if($2 >= 1000 && $6 >= coverage_min || NR == 1) print}' "$binID"_assembly/"$binID"_d_info/"$binID"_info_contigstats.txt > list.txt
     echo "End: get contigs >1000bp and with sufficient coverage" | tee -a "$jorg_logfile"
